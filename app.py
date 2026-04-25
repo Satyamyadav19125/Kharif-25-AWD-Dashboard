@@ -7,9 +7,9 @@ logging.basicConfig(level=logging.INFO)
 
 # ── Google Sheets export URLs ──────────────────────────────────────────
 # Make sure both sheets are set to "Anyone with the link can view"
-AWD_URL      = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=1669614800"
+AWD_URL      = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=1066902470"
 AWD_UG_URL   = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=0"
-LIB_URL      = "https://docs.google.com/spreadsheets/d/14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA/export?format=csv&gid=0"
+LIB_URL      = "https://docs.google.com/spreadsheets/d/14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA/export?format=csv&gid=825105755"
 
 # ── Cache ──────────────────────────────────────────────────────────────
 _cache = {"data": None, "ts": 0}
