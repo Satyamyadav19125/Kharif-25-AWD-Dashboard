@@ -1,12 +1,15 @@
 from flask import Flask, render_template, jsonify
-import csv, io, os, time, threading, logging, requests
+import csv, io, os, re, time, threading, logging, requests
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-AWD_URL    = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=1066902470"
-AWD_UG_URL = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=0"
-LIB_URL    = "https://docs.google.com/spreadsheets/d/14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA/export?format=csv&gid=825105755"
+# AWD sheet - main farmer data (GID 1066902470)
+AWD_URL = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=1066902470"
+
+# Libertalia rawfarm sheet - has WKT polygons + Kharif 25 Farm ID join key
+# GID for rawfarm sheet (check Libertalia sheet tabs - rawfarm is the data sheet)
+LIB_URL = "https://docs.google.com/spreadsheets/d/14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA/export?format=csv&gid=825105755"
 
 _cache = {"data": None, "ts": 0}
 CACHE_TTL = 300
@@ -17,155 +20,195 @@ def fetch_csv(url):
     reader = csv.DictReader(io.StringIO(r.text))
     return [row for row in reader]
 
-def find_col(row, keywords):
+def parse_wkt_polygon(wkt):
+    """Parse POLYGON Z WKT into [[lat, lon], ...] list."""
+    if not wkt or not wkt.strip().startswith('POLYGON'):
+        return []
+    coords = re.findall(r'([\d.]+)\s+([\d.]+)\s+[\d.]+', wkt)
+    if not coords:
+        return []
+    return [[float(lat), float(lon)] for lon, lat in coords]
+
+def centroid(polygon):
+    """Return centroid lat, lon of a polygon."""
+    if not polygon:
+        return None, None
+    lats = [p[0] for p in polygon]
+    lons = [p[1] for p in polygon]
+    return sum(lats) / len(lats), sum(lons) / len(lons)
+
+def groupkey(g):
+    g = g.strip().upper()
+    if 'GROUP A' in g or g == 'A': return 'A'
+    if 'GROUP B' in g or g == 'B': return 'B'
+    if 'GROUP C' in g or g == 'C': return 'C'
+    # fallback: look for standalone A/B/C
+    if ' A ' in g or g.endswith(' A'): return 'A'
+    if ' B ' in g or g.endswith(' B'): return 'B'
+    return 'C'
+
+def safe_float(v):
+    try:
+        return float(v) if v and str(v).strip() not in ('', 'nan', 'N. A', 'N.A') else 0
+    except:
+        return 0
+
+def find_col(row_dict, keywords):
+    """Find column key matching any keyword (case-insensitive)."""
     for k in keywords:
-        for col in row.keys():
+        for col in row_dict.keys():
             if k.lower() in col.lower():
                 return col
     return None
 
-def parse_tw(s):
-    if not s or s.strip() == '': return None, None
-    parts = s.strip().split()
-    try: return float(parts[0]), float(parts[1])
-    except: return None, None
-
-def parse_polygon(s):
-    if not s: return []
-    coords = []
-    for seg in s.split(';'):
-        seg = seg.strip()
-        if not seg: continue
-        parts = seg.split()
-        if len(parts) >= 2:
-            try: coords.append([float(parts[0]), float(parts[1])])
-            except: pass
-    return coords
-
-def groupkey(g):
-    if 'Group A' in g: return 'A'
-    if 'Group B' in g: return 'B'
-    return 'C'
-
-def safe_float(v):
-    try: return float(v) if v and v.strip() not in ('', 'nan', 'N. A', 'N.A') else 0
-    except: return 0
-
 def fetch_and_process():
     logging.info("Fetching from Google Sheets...")
     try:
+        # ── Fetch AWD sheet ──────────────────────────────────────────────
         awd_rows = fetch_csv(AWD_URL)
-        if not awd_rows: return None
+        if not awd_rows:
+            logging.error("AWD sheet returned no rows")
+            return None
+        logging.info(f"AWD rows fetched: {len(awd_rows)}")
 
-        try: ug_rows = fetch_csv(AWD_UG_URL)
-        except: ug_rows = []
+        # Strip all column names (AWD sheet has leading spaces in Farm ID col)
+        awd_rows = [{k.strip(): v for k, v in row.items()} for row in awd_rows]
 
+        # ── Fetch Libertalia rawfarm sheet ───────────────────────────────
         lib_rows = fetch_csv(LIB_URL)
+        logging.info(f"Libertalia rows fetched: {len(lib_rows)}")
 
-        # Index libertalia by plot code
-        sample = lib_rows[0] if lib_rows else {}
-        plot_col = find_col(sample, ['plot code','plot_code','Plot code']) or list(sample.keys())[0]
-        poly_col = find_col(sample, ['polygon','polygons'])
-        tw_col   = find_col(sample, ['tw location','tw_location'])
-        if not poly_col: poly_col = list(sample.keys())[-1]
-        if not tw_col:   tw_col   = list(sample.keys())[-2]
+        # ── Find column names in AWD ─────────────────────────────────────
+        sample = awd_rows[0]
+        awd_id_col      = find_col(sample, ['farm id', 'farm_id'])
+        farmer_col      = find_col(sample, ['farmer name', 'farmer_name'])
+        village_col     = find_col(sample, ['village'])
+        group_col       = find_col(sample, ['groups', 'group'])
+        zone_col        = find_col(sample, ['study zone', 'zone'])
+        acres_col       = find_col(sample, ['farm acres', 'acres'])
+        inc_col         = find_col(sample, ['incentive acres'])
+        phone_col       = find_col(sample, ['phone'])
+        comply_col      = find_col(sample, ['bank details verified', 'complied', 'consent signed'])
+
+        logging.info(f"AWD cols: id={awd_id_col}, farmer={farmer_col}, village={village_col}, "
+                     f"group={group_col}, acres={acres_col}, comply={comply_col}")
+
+        # ── Build Libertalia index: FarmID → polygon + centroid ──────────
+        lib_sample = lib_rows[0] if lib_rows else {}
+        lib_id_col  = find_col(lib_sample, ['kharif 25 farm id', 'farm id', 'farm_id'])
+        lib_wkt_col = find_col(lib_sample, ['wkt', 'polygon z', 'polygon'])
+
+        # Fallback: if column names not found, use positional (col 4 = Farm ID, col 1 = WKT)
+        if not lib_id_col:
+            keys = list(lib_sample.keys())
+            lib_id_col = keys[4] if len(keys) > 4 else None
+        if not lib_wkt_col:
+            keys = list(lib_sample.keys())
+            lib_wkt_col = keys[1] if len(keys) > 1 else None
+
+        logging.info(f"Libertalia cols: id={lib_id_col}, wkt={lib_wkt_col}")
 
         lib_index = {}
         for row in lib_rows:
-            pid = row.get(plot_col, '').strip()
-            if pid: lib_index[pid] = row
+            fid = row.get(lib_id_col, '').strip() if lib_id_col else ''
+            wkt = row.get(lib_wkt_col, '').strip() if lib_wkt_col else ''
+            if not fid or fid.startswith('='):
+                continue
+            poly = parse_wkt_polygon(wkt)
+            if not poly:
+                continue
+            clat, clon = centroid(poly)
+            if clat is None:
+                continue
+            lib_index[fid] = {'polygon': poly, 'tw_lat': clat, 'tw_lon': clon}
 
-        # Index United Groups by farm id
-        ug_index = {}
-        if ug_rows:
-            sample_ug = ug_rows[0]
-            ug_id_col = find_col(sample_ug, ['farm id','farm_id'])
-            comply_col_ug = find_col(sample_ug, ['complied'])
-            pay_col_ug    = find_col(sample_ug, ['total payment','TOTAL Payment'])
-            if ug_id_col:
-                for row in ug_rows:
-                    uid = row.get(ug_id_col, '').strip()
-                    if uid: ug_index[uid] = row
+        logging.info(f"Libertalia farms indexed: {len(lib_index)}")
 
-        # Find AWD columns
-        sample_awd = awd_rows[0]
-        awd_id_col     = find_col(sample_awd, ['farm id','farm_id']) or list(sample_awd.keys())[2]
-        farmer_col     = find_col(sample_awd, ['farmer name','farmer_name'])
-        village_col    = find_col(sample_awd, ['village'])
-        group_col      = find_col(sample_awd, ['groups','group'])
-        zone_col       = find_col(sample_awd, ['study zone','zone'])
-        acres_col      = find_col(sample_awd, ['farm acres','acres'])
-        inc_col        = find_col(sample_awd, ['incentive acres'])
-        phone_col      = find_col(sample_awd, ['phone'])
-
+        # ── Build farm records ───────────────────────────────────────────
         records = []
+        skipped_no_match = 0
         for row in awd_rows:
-            fid = row.get(awd_id_col, '').strip()
-            if not fid or fid not in lib_index: continue
+            fid = row.get(awd_id_col, '').strip() if awd_id_col else ''
+            if not fid:
+                continue
+            if fid not in lib_index:
+                skipped_no_match += 1
+                continue
 
-            lrow = lib_index[fid]
-            tw_lat, tw_lon = parse_tw(lrow.get(tw_col, ''))
-            if tw_lat is None: continue
+            geo = lib_index[fid]
+            group_val = row.get(group_col, '') if group_col else ''
+            comply_val = row.get(comply_col, '') if comply_col else ''
 
-            ug = ug_index.get(fid, {})
-            comply_col_name = find_col(ug, ['complied']) if ug else None
-            pay_col_name    = find_col(ug, ['total payment']) if ug else None
+            # Normalise compliance: 1.0 / 0.0 / ''
+            if comply_val.strip() in ('1', '1.0', 'yes', 'Yes', 'YES', 'Y', 'y'):
+                comply_norm = '1.0'
+            elif comply_val.strip() in ('0', '0.0', 'no', 'No', 'NO', 'N', 'n'):
+                comply_norm = '0.0'
+            else:
+                comply_norm = comply_val.strip()
 
             records.append({
                 'farm_id':         fid,
                 'farmer_name':     row.get(farmer_col, '') if farmer_col else '',
                 'village':         row.get(village_col, '') if village_col else '',
-                'group':           row.get(group_col, '') if group_col else '',
-                'group_key':       groupkey(row.get(group_col, '') if group_col else ''),
+                'group':           group_val,
+                'group_key':       groupkey(group_val),
                 'zone':            row.get(zone_col, '') if zone_col else '',
                 'acres':           safe_float(row.get(acres_col, 0) if acres_col else 0),
                 'incentive_acres': safe_float(row.get(inc_col, 0) if inc_col else 0),
                 'phone':           row.get(phone_col, '') if phone_col else '',
-                'complied':        str(ug.get(comply_col_name, '')) if comply_col_name else '',
-                'total_payment':   safe_float(ug.get(pay_col_name, 0) if pay_col_name else 0),
-                'tw_lat':          tw_lat,
-                'tw_lon':          tw_lon,
-                'polygon':         parse_polygon(lrow.get(poly_col, ''))
+                'complied':        comply_norm,
+                'total_payment':   0,
+                'tw_lat':          geo['tw_lat'],
+                'tw_lon':          geo['tw_lon'],
+                'polygon':         geo['polygon'],
             })
 
-        # Village stats
+        logging.info(f"Records built: {len(records)}, skipped (no geo match): {skipped_no_match}")
+
+        # ── Village stats ────────────────────────────────────────────────
         village_map = {}
         for f in records:
             v = f['village']
             if v not in village_map:
-                village_map[v] = {'village':v,'total':0,'group_a':0,'group_b':0,'group_c':0,'total_acres':0,'incentive_acres':0}
+                village_map[v] = {
+                    'village': v, 'total': 0,
+                    'group_a': 0, 'group_b': 0, 'group_c': 0,
+                    'total_acres': 0, 'incentive_acres': 0
+                }
             village_map[v]['total'] += 1
-            village_map[v]['group_'+f['group_key'].lower()] += 1
+            village_map[v]['group_' + f['group_key'].lower()] += 1
             village_map[v]['total_acres'] += f['acres']
             village_map[v]['incentive_acres'] += f['incentive_acres']
         villages = sorted(village_map.values(), key=lambda x: -x['total'])
 
+        # ── Stats ────────────────────────────────────────────────────────
         total    = len(records)
-        group_a  = sum(1 for f in records if f['group_key']=='A')
-        group_b  = sum(1 for f in records if f['group_key']=='B')
-        group_c  = sum(1 for f in records if f['group_key']=='C')
-        complied = sum(1 for f in records if f['complied']=='1.0')
-        not_comp = sum(1 for f in records if f['complied']=='0.0')
+        group_a  = sum(1 for f in records if f['group_key'] == 'A')
+        group_b  = sum(1 for f in records if f['group_key'] == 'B')
+        group_c  = sum(1 for f in records if f['group_key'] == 'C')
+        complied = sum(1 for f in records if f['complied'] == '1.0')
+        not_comp = sum(1 for f in records if f['complied'] == '0.0')
         t_acres  = round(sum(f['acres'] for f in records), 1)
         i_acres  = round(sum(f['incentive_acres'] for f in records), 1)
-        n_vill   = len(villages)
 
         stats = {
             'total': total, 'group_a': group_a, 'group_b': group_b, 'group_c': group_c,
             'complied': complied, 'not_complied': not_comp,
             'total_acres': t_acres, 'incentive_acres': i_acres,
-            'total_payment': 0, 'villages': n_vill,
+            'total_payment': 0, 'villages': len(villages),
             'last_updated': time.strftime('%d %b %Y, %H:%M UTC', time.gmtime())
         }
 
-        logging.info(f"Loaded {total} farms, {n_vill} villages")
+        logging.info(f"Done — {total} farms, {len(villages)} villages, {complied} complied")
         return {'farms': records, 'villages': villages, 'stats': stats}
 
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logging.error(f"Error in fetch_and_process: {e}")
         import traceback; traceback.print_exc()
         return None
 
+# ── Cache + warmup ───────────────────────────────────────────────────────────
 def get_data():
     now = time.time()
     if _cache['data'] is None or (now - _cache['ts']) > CACHE_TTL:
@@ -181,20 +224,25 @@ def warmup():
 
 threading.Thread(target=warmup, daemon=True).start()
 
+# ── Routes ───────────────────────────────────────────────────────────────────
 @app.route('/')
-def index(): return render_template('index.html')
+def index():
+    return render_template('index.html')
 
 @app.route('/api/farms')
 def farms():
-    d = get_data(); return jsonify(d['farms'] if d else [])
+    d = get_data()
+    return jsonify(d['farms'] if d else [])
 
 @app.route('/api/villages')
 def villages():
-    d = get_data(); return jsonify(d['villages'] if d else [])
+    d = get_data()
+    return jsonify(d['villages'] if d else [])
 
 @app.route('/api/stats')
 def stats():
-    d = get_data(); return jsonify(d['stats'] if d else {})
+    d = get_data()
+    return jsonify(d['stats'] if d else {})
 
 @app.route('/api/refresh')
 def refresh():
@@ -203,7 +251,8 @@ def refresh():
     return jsonify({'ok': True, 'farms': len(d['farms']) if d else 0})
 
 @app.route('/health')
-def health(): return jsonify({'status': 'ok', 'ts': time.time()})
+def health():
+    return jsonify({'status': 'ok', 'ts': time.time()})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
