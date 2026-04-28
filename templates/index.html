@@ -24,15 +24,16 @@
   --orange:   #ff6e40;
   --yellow:   #ffd740;
   --red:      #ff5252;
+  --purple:   #b388ff;
   --green-bg: rgba(0,230,118,0.08);
   --blue-bg:  rgba(64,196,255,0.08);
   --orange-bg:rgba(255,110,64,0.08);
   --yellow-bg:rgba(255,215,64,0.08);
+  --purple-bg:rgba(179,136,255,0.08);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; }
 
-/* ═══ LAYOUT ═══════════════════════════════════════════════════════════ */
 .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
 
 /* ═══ TOPBAR ════════════════════════════════════════════════════════════ */
@@ -42,10 +43,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   display: flex; align-items: center; padding: 0 20px; gap: 20px;
   position: relative; z-index: 200;
 }
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  font-weight: 700; font-size: 15px; letter-spacing: -0.3px; white-space: nowrap;
-}
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: -0.3px; white-space: nowrap; }
 .logo-icon {
   width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
   background: linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
@@ -55,81 +53,59 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .logo-sub { font-size: 11px; color: var(--muted); font-weight: 400; font-family: 'JetBrains Mono', monospace; }
 .topbar-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
 .kpi-strip { display: flex; gap: 0; flex: 1; overflow: hidden; }
-.kpi {
-  padding: 0 18px; border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; justify-content: center;
-}
+.kpi { padding: 0 18px; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
 .kpi:first-child { padding-left: 0; }
 .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 600; line-height: 1; }
 .kpi-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
-.kv-total  { color: var(--text); }
-.kv-a      { color: var(--green); }
-.kv-b      { color: var(--blue); }
-.kv-c      { color: var(--orange); }
+.kv-total { color: var(--text); }
+.kv-a { color: var(--green); }
+.kv-b { color: var(--blue); }
+.kv-c { color: var(--orange); }
 .kv-comply { color: var(--yellow); }
-.kv-pay    { color: var(--green); }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .tag { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+
+/* dev badge in topbar */
+.dev-badge {
+  display: none; align-items: center; gap: 7px;
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(179,136,255,0.3);
+  cursor: pointer; transition: all .15s;
+}
+.dev-badge:hover { background: rgba(179,136,255,0.15); }
+.dev-badge.visible { display: flex; }
+.dev-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
 /* ═══ BODY SPLIT ════════════════════════════════════════════════════════ */
 .body { display: grid; grid-template-columns: 400px 1fr; overflow: hidden; }
 
 /* ═══ ANALYTICS PANEL ══════════════════════════════════════════════════ */
-.analytics {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  overflow: hidden;
-}
-.panel-header {
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
-}
+.analytics { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.panel-header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .panel-title { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
 .panel-tabs { display: flex; gap: 4px; }
-.tab-btn {
-  padding: 4px 10px; border-radius: 5px; border: 1px solid transparent;
-  font-size: 11px; font-weight: 500; cursor: pointer;
-  background: transparent; color: var(--muted); transition: all 0.15s; font-family: inherit;
-}
+.tab-btn { padding: 4px 10px; border-radius: 5px; border: 1px solid transparent; font-size: 11px; font-weight: 500; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.15s; font-family: inherit; }
 .tab-btn:hover { color: var(--text); background: var(--card); }
 .tab-btn.active { background: var(--card); color: var(--text); border-color: var(--border2); }
-
 .analytics-scroll { flex: 1; overflow-y: auto; padding: 14px; }
 .analytics-scroll::-webkit-scrollbar { width: 3px; }
 .analytics-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 /* ═══ CARDS ═════════════════════════════════════════════════════════════ */
 .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--dimmed); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
-
 .cards-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
 .cards-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 14px; }
-.metric-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 12px; position: relative; overflow: hidden;
-}
-.metric-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background: var(--accent, var(--blue));
-}
+.metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; position: relative; overflow: hidden; }
+.metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--accent, var(--blue)); }
 .mc-val { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--accent, var(--blue)); line-height: 1; }
 .mc-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.mc-sub { font-size: 10px; color: var(--dimmed); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
 
-/* ═══ DONUT / BAR CHARTS ════════════════════════════════════════════════ */
-.chart-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 14px; margin-bottom: 14px;
-}
+/* ═══ CHARTS ════════════════════════════════════════════════════════════ */
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
 .chart-title { font-size: 12px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
 .chart-wrap { position: relative; }
-.chart-wrap canvas { display: block; }
-.donut-center {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  text-align: center; pointer-events: none;
-}
+.donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
 .donut-num { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; }
 .donut-sub { font-size: 10px; color: var(--muted); }
 .chart-legend { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
@@ -145,23 +121,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .pr-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
 
 /* ═══ FARM LIST ════════════════════════════════════════════════════════ */
-.search-box {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--card); border: 1px solid var(--border); border-radius: 7px;
-  padding: 0 10px; margin-bottom: 10px;
-}
-.search-box input {
-  flex: 1; background: none; border: none; outline: none; color: var(--text);
-  font-size: 13px; padding: 9px 0; font-family: inherit;
-}
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 0 10px; margin-bottom: 10px; }
+.search-box input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 13px; padding: 9px 0; font-family: inherit; }
 .search-box input::placeholder { color: var(--dimmed); }
-.search-icon { color: var(--dimmed); font-size: 15px; }
 .filter-pills { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
-.pill {
-  padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500;
-  cursor: pointer; border: 1px solid var(--border); background: transparent;
-  color: var(--muted); transition: all 0.15s; font-family: inherit;
-}
+.pill { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s; font-family: inherit; }
 .pill:hover { color: var(--text); border-color: var(--border2); }
 .pill.p-all.on  { background: rgba(220,232,240,0.1); color: var(--text); border-color: var(--border2); }
 .pill.p-a.on    { background: var(--green-bg); color: var(--green); border-color: rgba(0,230,118,0.3); }
@@ -171,11 +135,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .farm-list { overflow-y: auto; flex: 1; margin: 0 -14px; padding: 0 14px; }
 .farm-list::-webkit-scrollbar { width: 3px; }
 .farm-list::-webkit-scrollbar-thumb { background: var(--border2); }
-.farm-row {
-  display: flex; align-items: center; gap: 10px; padding: 9px 0;
-  border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s;
-  border-radius: 6px; margin: 0 -6px; padding: 8px 6px;
-}
+.farm-row { display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.1s; border-bottom: 1px solid var(--border); border-radius: 6px; margin: 0 -6px; padding: 8px 6px; }
 .farm-row:hover { background: rgba(255,255,255,0.03); }
 .farm-row.sel { background: rgba(64,196,255,0.06); border-left: 3px solid var(--blue); padding-left: 9px; margin-left: -9px; }
 .fr-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -199,85 +159,197 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .map-side { position: relative; overflow: hidden; }
 #map { width: 100%; height: 100%; }
 
-/* MAP OVERLAYS */
-.map-legend {
-  position: absolute; bottom: 24px; left: 16px; z-index: 500;
-  background: rgba(13,19,26,0.92); backdrop-filter: blur(8px);
-  border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
-  min-width: 200px;
-}
+.map-legend { position: absolute; bottom: 24px; left: 16px; z-index: 500; background: rgba(13,19,26,0.92); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 200px; }
 .ml-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--dimmed); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
 .ml-item { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; font-size: 12px; }
 .ml-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .ml-count { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
 
-.map-search-overlay {
-  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-  z-index: 500; width: 340px;
-}
-.mso-inner {
-  background: rgba(13,19,26,0.92); backdrop-filter: blur(8px);
-  border: 1px solid var(--border); border-radius: 8px;
-  display: flex; align-items: center; gap: 8px; padding: 0 12px;
-}
-.mso-inner input {
-  flex: 1; background: none; border: none; outline: none; color: var(--text);
-  font-size: 13px; padding: 10px 0; font-family: inherit;
-}
+.map-search-overlay { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 500; width: 340px; }
+.mso-inner { background: rgba(13,19,26,0.92); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+.mso-inner input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 13px; padding: 10px 0; font-family: inherit; }
 .mso-inner input::placeholder { color: var(--dimmed); }
 
-/* DETAIL POPUP */
-.detail-popup {
-  position: absolute; top: 14px; right: 14px; z-index: 600;
-  width: 270px; background: rgba(13,19,26,0.96); backdrop-filter: blur(12px);
-  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-  transform: translateX(20px); opacity: 0;
-  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  pointer-events: none;
-}
-.detail-popup.open {
-  transform: translateX(0); opacity: 1; pointer-events: all;
-}
-.dp-header {
-  padding: 14px 16px 10px;
-  background: linear-gradient(135deg, rgba(64,196,255,0.08), rgba(0,230,118,0.05));
-  border-bottom: 1px solid var(--border);
-}
+.detail-popup { position: absolute; top: 14px; right: 14px; z-index: 600; width: 270px; background: rgba(13,19,26,0.96); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6); transform: translateX(20px); opacity: 0; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+.detail-popup.open { transform: translateX(0); opacity: 1; pointer-events: all; }
+.dp-header { padding: 14px 16px 10px; background: linear-gradient(135deg, rgba(64,196,255,0.08), rgba(0,230,118,0.05)); border-bottom: 1px solid var(--border); }
 .dp-name { font-size: 15px; font-weight: 700; line-height: 1.2; }
-.dp-badge {
-  display: inline-block; margin-top: 5px;
-  padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
-  letter-spacing: 0.3px; text-transform: uppercase;
-}
-.dp-close {
-  position: absolute; top: 12px; right: 12px;
-  background: var(--card); border: 1px solid var(--border); color: var(--muted);
-  width: 24px; height: 24px; border-radius: 6px; cursor: pointer;
-  font-size: 14px; display: flex; align-items: center; justify-content: center;
-}
+.dp-badge { display: inline-block; margin-top: 5px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+.dp-close { position: absolute; top: 12px; right: 12px; background: var(--card); border: 1px solid var(--border); color: var(--muted); width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
 .dp-close:hover { color: var(--text); border-color: var(--border2); }
 .dp-body { padding: 12px 16px; }
 .dp-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
 .dp-lbl { font-size: 10px; color: var(--dimmed); text-transform: uppercase; letter-spacing: 0.5px; }
 .dp-val { font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text); max-width: 150px; text-align: right; word-break: break-all; }
-.dp-comply {
-  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
-  display: flex; align-items: center; gap: 7px; font-size: 12px;
-}
+.dp-comply { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 7px; font-size: 12px; }
 .comply-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
 .cb-yes { background: var(--green-bg); color: var(--green); }
 .cb-no  { background: rgba(255,82,82,0.1); color: var(--red); }
 .cb-na  { background: var(--yellow-bg); color: var(--yellow); }
 
-/* Leaflet overrides */
 .leaflet-control-attribution { display: none !important; }
 .leaflet-control-zoom a { background: var(--card) !important; color: var(--text) !important; border-color: var(--border) !important; }
-
-/* Scrollbar global */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LOGIN MODAL
+═══════════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(4,8,12,0.82); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.login-modal {
+  width: 360px; background: var(--surface);
+  border: 1px solid var(--border2); border-radius: 16px;
+  overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+  transform: translateY(16px) scale(.97);
+  transition: transform .25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-overlay.open .login-modal { transform: translateY(0) scale(1); }
+.lm-header {
+  padding: 24px 24px 20px;
+  background: linear-gradient(135deg, rgba(179,136,255,0.08), rgba(64,196,255,0.05));
+  border-bottom: 1px solid var(--border);
+}
+.lm-icon {
+  width: 40px; height: 40px; border-radius: 10px; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.lm-title { font-size: 16px; font-weight: 700; }
+.lm-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.lm-body  { padding: 20px 24px 24px; }
+.lm-field { margin-bottom: 14px; }
+.lm-label { font-size: 11px; color: var(--dimmed); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+.lm-input {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-size: 13px; font-family: 'Space Grotesk', sans-serif; outline: none;
+  transition: border-color .15s;
+}
+.lm-input:focus { border-color: var(--purple); }
+.lm-input.error { border-color: var(--red); }
+.lm-error { font-size: 11px; color: var(--red); margin-top: 8px; min-height: 16px; }
+.lm-btn {
+  width: 100%; padding: 11px; border-radius: 8px; border: none; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+  background: linear-gradient(135deg, var(--purple), #7c4dff);
+  color: #fff; transition: opacity .15s, transform .1s;
+}
+.lm-btn:hover { opacity: .9; transform: translateY(-1px); }
+.lm-btn:active { transform: translateY(0); }
+.lm-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.lm-close {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted);
+  width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.lm-close:hover { color: var(--text); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DEV PANEL (full overlay)
+═══════════════════════════════════════════════════════════════════════ */
+.dev-panel {
+  position: fixed; inset: 0; z-index: 1500;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+.dev-panel.open { transform: translateY(0); }
+.dp-topbar {
+  height: 52px; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 16px; flex-shrink: 0;
+}
+.dp-topbar-title { font-size: 14px; font-weight: 700; color: var(--purple); }
+.dp-topbar-user  { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.dp-close-btn {
+  margin-left: auto; padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.dp-close-btn:hover { color: var(--text); }
+
+/* Sub-tabs inside dev panel */
+.dp-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.dp-tab  { padding: 10px 20px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all .15s; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+.dp-tab:hover  { color: var(--text); }
+.dp-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+.dp-body-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.dp-tab-content { display: none; flex: 1; overflow: hidden; }
+.dp-tab-content.active { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Visibility toggles ─────────────────────────────── */
+.vis-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px; padding: 20px; overflow-y: auto;
+}
+.vis-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+  transition: border-color .15s;
+}
+.vis-card:hover { border-color: var(--border2); }
+.vis-card-info { }
+.vis-card-name { font-size: 13px; font-weight: 600; }
+.vis-card-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+/* Toggle switch */
+.toggle-wrap { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+.toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; inset: 0; border-radius: 22px; cursor: pointer;
+  background: var(--border2); transition: background .2s;
+}
+.toggle-slider::after {
+  content: ''; position: absolute; left: 3px; top: 3px;
+  width: 16px; height: 16px; border-radius: 50%; background: #fff;
+  transition: transform .2s;
+}
+.toggle-wrap input:checked + .toggle-slider { background: var(--purple); }
+.toggle-wrap input:checked + .toggle-slider::after { transform: translateX(16px); }
+
+/* ── Raw table view ─────────────────────────────────── */
+.raw-toolbar {
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0; background: var(--surface);
+}
+.raw-sheet-btn {
+  padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card); color: var(--muted); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.raw-sheet-btn:hover  { color: var(--text); }
+.raw-sheet-btn.active { background: var(--purple-bg); color: var(--purple); border-color: rgba(179,136,255,0.4); }
+.raw-search { flex: 1; max-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 12px; color: var(--text); font-size: 12px; font-family: inherit; outline: none; }
+.raw-search:focus { border-color: var(--purple); }
+.raw-count { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.raw-loading { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; gap: 10px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.table-wrap { flex: 1; overflow: auto; }
+.table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.raw-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+.raw-table th {
+  position: sticky; top: 0; z-index: 10;
+  padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border2);
+  color: var(--dimmed); font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+  font-weight: 600; white-space: nowrap; text-align: left; cursor: pointer;
+}
+.raw-table th:hover { color: var(--text); }
+.raw-table th.sorted { color: var(--purple); }
+.raw-table td {
+  padding: 7px 14px; border-bottom: 1px solid var(--border);
+  white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+  font-family: 'JetBrains Mono', monospace; color: var(--muted);
+}
+.raw-table tr:hover td { background: rgba(179,136,255,0.04); color: var(--text); }
 </style>
 </head>
 <body>
@@ -299,21 +371,27 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <div class="kpi"><div class="kpi-val kv-b" id="kv-b">—</div><div class="kpi-lbl">Group B</div></div>
     <div class="kpi"><div class="kpi-val kv-c" id="kv-c">—</div><div class="kpi-lbl">Group C</div></div>
     <div class="kpi"><div class="kpi-val kv-comply" id="kv-comply">—</div><div class="kpi-lbl">Complied</div></div>
-    <div class="kpi"><div class="kpi-val kv-pay" id="kv-pay">—</div><div class="kpi-lbl">Total Acres</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--text)" id="kv-pay">—</div><div class="kpi-lbl">Total Acres</div></div>
     <div class="kpi"><div class="kpi-val" style="color:var(--yellow)" id="kv-villages">—</div><div class="kpi-lbl">Villages</div></div>
   </div>
-  <div class="topbar-right" style="display:flex;align-items:center;gap:10px;">
+  <div class="topbar-right">
     <span style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;" id="last-updated"></span>
-    <button onclick="forceRefresh()" style="padding:4px 12px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">↻ Refresh</button>
+    <button onclick="forceRefresh()" style="padding:4px 12px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">↻ Refresh</button>
+    <!-- Dev badge (shown when logged in) -->
+    <div class="dev-badge" id="dev-badge" onclick="openDevPanel()">
+      <div class="dev-dot"></div>
+      <span id="dev-badge-name">DEV</span>
+    </div>
+    <!-- Login button (shown when logged out) -->
+    <button id="login-btn" onclick="openLoginModal()" style="padding:4px 12px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">⚙ Dev Login</button>
     <span class="tag">● LIVE</span>
   </div>
 </header>
 
 <!-- ══ BODY ════════════════════════════════════════════════════════════ -->
 <div class="body">
-
-  <!-- ══ ANALYTICS PANEL ═════════════════════════════════════════════ -->
-  <aside class="analytics">
+  <!-- ══ ANALYTICS PANEL ════════════════════════════════════════════ -->
+  <aside class="analytics" id="analytics-panel">
     <div class="panel-header">
       <span class="panel-title">Analytics</span>
       <div class="panel-tabs">
@@ -323,9 +401,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       </div>
     </div>
 
-    <!-- ── OVERVIEW TAB ──────────────────────────────────────────────── -->
+    <!-- ── OVERVIEW TAB ─────────────────────────────────────────────── -->
     <div class="tab-view active analytics-scroll" id="tab-overview" style="padding:14px;">
-
       <div class="section-label">Group Distribution</div>
       <div class="chart-card" style="display:grid;grid-template-columns:1fr 140px;gap:16px;align-items:center;">
         <div>
@@ -351,19 +428,10 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       </div>
 
       <div class="section-label">Key Metrics</div>
-      <div class="cards-3" id="metric-cards">
-        <div class="metric-card" style="--accent:var(--green)">
-          <div class="mc-val" id="m-total-acres">—</div>
-          <div class="mc-lbl">Total Acres</div>
-        </div>
-        <div class="metric-card" style="--accent:var(--blue)">
-          <div class="mc-val" id="m-inc-acres">—</div>
-          <div class="mc-lbl">Incentive Acres</div>
-        </div>
-        <div class="metric-card" style="--accent:var(--yellow)">
-          <div class="mc-val" id="m-villages">—</div>
-          <div class="mc-lbl">Villages</div>
-        </div>
+      <div class="cards-3">
+        <div class="metric-card" style="--accent:var(--green)"><div class="mc-val" id="m-total-acres">—</div><div class="mc-lbl">Total Acres</div></div>
+        <div class="metric-card" style="--accent:var(--blue)"><div class="mc-val" id="m-inc-acres">—</div><div class="mc-lbl">Incentive Acres</div></div>
+        <div class="metric-card" style="--accent:var(--yellow)"><div class="mc-val" id="m-villages">—</div><div class="mc-lbl">Villages</div></div>
       </div>
 
       <div class="section-label">Acres per Group</div>
@@ -377,16 +445,15 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
         <div class="chart-title">Village Breakdown</div>
         <div id="village-progress"></div>
       </div>
-
     </div>
 
-    <!-- ── VILLAGES TAB ─────────────────────────────────────────────── -->
+    <!-- ── VILLAGES TAB ──────────────────────────────────────────────── -->
     <div class="tab-view analytics-scroll" id="tab-villages" style="padding:14px;">
       <div class="section-label">All Villages</div>
       <div id="village-table"></div>
     </div>
 
-    <!-- ── FARMS TAB ────────────────────────────────────────────────── -->
+    <!-- ── FARMS TAB ─────────────────────────────────────────────────── -->
     <div class="tab-view" id="tab-farms" style="padding:14px;padding-bottom:0;">
       <div class="search-box">
         <span class="search-icon">⌕</span>
@@ -404,30 +471,26 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   </aside>
 
   <!-- ══ MAP SIDE ════════════════════════════════════════════════════ -->
-  <div class="map-side">
+  <div class="map-side" id="map-side">
     <div id="map"></div>
-
     <div class="map-search-overlay">
       <div class="mso-inner">
         <span style="color:var(--dimmed);font-size:15px;">⌕</span>
         <input type="text" id="map-search" placeholder="Jump to village or farmer…" oninput="mapSearch(this.value)">
       </div>
     </div>
-
-    <div class="map-legend">
+    <div class="map-legend" id="map-legend">
       <div class="ml-title">Study Groups</div>
       <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Group A · AWD + Incentive<span class="ml-count" id="ml-a">—</span></div>
       <div class="ml-item"><div class="ml-dot" style="background:var(--blue)"></div>Group B · AWD + PVC Pipes<span class="ml-count" id="ml-b">—</span></div>
       <div class="ml-item"><div class="ml-dot" style="background:var(--orange)"></div>Group C · PVC Pipes Only<span class="ml-count" id="ml-c">—</span></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div class="ml-title" style="margin-bottom:6px;">Compliance</div>
-        <div class="ml-item"><div class="comply-dot" style="background:var(--green);width:8px;height:8px;border-radius:50%"></div>Complied</div>
-        <div class="ml-item"><div class="comply-dot" style="background:var(--red);width:8px;height:8px;border-radius:50%"></div>Not Complied</div>
-        <div class="ml-item"><div class="comply-dot" style="background:var(--dimmed);width:8px;height:8px;border-radius:50%"></div>Unknown</div>
+        <div class="ml-item"><div class="ml-dot" style="background:var(--green);width:8px;height:8px;border-radius:50%"></div>Complied</div>
+        <div class="ml-item"><div class="ml-dot" style="background:var(--red);width:8px;height:8px;border-radius:50%"></div>Not Complied</div>
+        <div class="ml-item"><div class="ml-dot" style="background:var(--dimmed);width:8px;height:8px;border-radius:50%"></div>Unknown</div>
       </div>
     </div>
-
-    <!-- Farm detail popup -->
     <div class="detail-popup" id="detail-popup">
       <button class="dp-close" onclick="closeDetail()">✕</button>
       <div class="dp-header">
@@ -441,16 +504,93 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
         <div class="dp-row"><span class="dp-lbl">Farm Acres</span><span class="dp-val" id="dp-acres"></span></div>
         <div class="dp-row"><span class="dp-lbl">Incentive Acres</span><span class="dp-val" id="dp-inc"></span></div>
         <div class="dp-row"><span class="dp-lbl">Phone</span><span class="dp-val" id="dp-phone"></span></div>
-        <div class="dp-comply">
-          <span class="dp-lbl">AWD Compliance</span>
-          <span class="comply-badge" id="dp-comply">—</span>
-        </div>
+        <div class="dp-comply"><span class="dp-lbl">AWD Compliance</span><span class="comply-badge" id="dp-comply">—</span></div>
       </div>
     </div>
   </div>
 </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════
+     LOGIN MODAL
+══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="login-modal">
+  <div class="login-modal" style="position:relative;">
+    <button class="lm-close" onclick="closeLoginModal()">✕</button>
+    <div class="lm-header">
+      <div class="lm-icon">🛠</div>
+      <div class="lm-title">Developer Access</div>
+      <div class="lm-sub">Sign in to unlock raw data tables and dashboard controls</div>
+    </div>
+    <div class="lm-body">
+      <div class="lm-field">
+        <label class="lm-label" for="lm-user">Username</label>
+        <input class="lm-input" id="lm-user" type="text" placeholder="Enter username" autocomplete="username">
+      </div>
+      <div class="lm-field">
+        <label class="lm-label" for="lm-pass">Password</label>
+        <input class="lm-input" id="lm-pass" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="lm-error" id="lm-error"></div>
+      <button class="lm-btn" id="lm-btn" onclick="doLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     DEV PANEL
+══════════════════════════════════════════════════════════════════════ -->
+<div class="dev-panel" id="dev-panel">
+  <div class="dp-topbar">
+    <div style="font-size:18px;">🛠</div>
+    <div>
+      <div class="dp-topbar-title">Developer Panel</div>
+      <div class="dp-topbar-user" id="dp-user-label">—</div>
+    </div>
+    <button class="dp-close-btn" onclick="closeDevPanel()">✕ Close</button>
+    <button onclick="doLogout()" style="padding:5px 14px;border-radius:6px;border:1px solid rgba(255,82,82,.3);background:rgba(255,82,82,.08);color:var(--red);font-size:12px;cursor:pointer;font-family:inherit;">Sign Out</button>
+  </div>
+
+  <div class="dp-tabs">
+    <button class="dp-tab active" onclick="switchDevTab('visibility',this)">Panel Visibility</button>
+    <button class="dp-tab" onclick="switchDevTab('raw-awd',this)">AWD Offers Sheet</button>
+    <button class="dp-tab" onclick="switchDevTab('raw-lib',this)">Master Control Sheet</button>
+  </div>
+
+  <div class="dp-body-area">
+    <!-- ── Visibility tab ─────────────────────────────────────────── -->
+    <div class="dp-tab-content active" id="devtab-visibility">
+      <div style="padding:16px 20px 0;font-size:11px;color:var(--muted);">Toggle which panels and elements are visible on the main dashboard.</div>
+      <div class="vis-grid" id="vis-grid"></div>
+    </div>
+
+    <!-- ── AWD raw table ──────────────────────────────────────────── -->
+    <div class="dp-tab-content" id="devtab-raw-awd">
+      <div class="raw-toolbar">
+        <input class="raw-search" id="raw-awd-search" placeholder="Search rows…" oninput="filterRawTable('awd')">
+        <span class="raw-count" id="raw-awd-count"></span>
+      </div>
+      <div id="raw-awd-area" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="raw-loading" id="raw-awd-loading"><div class="spinner"></div> Loading AWD sheet…</div>
+      </div>
+    </div>
+
+    <!-- ── Libertalia raw table ───────────────────────────────────── -->
+    <div class="dp-tab-content" id="devtab-raw-lib">
+      <div class="raw-toolbar">
+        <input class="raw-search" id="raw-lib-search" placeholder="Search rows…" oninput="filterRawTable('lib')">
+        <span class="raw-count" id="raw-lib-count"></span>
+      </div>
+      <div id="raw-lib-area" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="raw-loading" id="raw-lib-loading"><div class="spinner"></div> Loading Master Control sheet…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════════════ -->
 <script>
 const GC = { A: '#00e676', B: '#40c4ff', C: '#ff6e40' };
 let FARMS = [], VILLAGES = [], STATS = {};
@@ -458,7 +598,25 @@ let activeFilter = 'all', selectedId = null;
 const markers = {}, polygons = {};
 let barAcresChart = null, donutGroupChart = null, donutComplyChart = null;
 
-// ═══ INIT ════════════════════════════════════════════════════════════════
+// ─── Dev state ───────────────────────────────────────────────────────────────
+let DEV_USER = null;
+let RAW_DATA = { awd: null, lib: null };
+
+// Visibility config: id → { label, desc, defaultOn, selector/fn }
+const VIS_CONFIG = [
+  { id:'kpi-strip',    label:'KPI Strip',         desc:'Top bar stats (farms, groups, compliance)', selector: '.kpi-strip' },
+  { id:'analytics',    label:'Analytics Panel',   desc:'Left panel with charts and farm list',      selector: '#analytics-panel' },
+  { id:'map-legend',   label:'Map Legend',        desc:'Group & compliance legend on map',          selector: '#map-legend' },
+  { id:'map-search',   label:'Map Search Bar',    desc:'Search overlay on the map',                 selector: '.map-search-overlay' },
+  { id:'overview-grp', label:'Group Donut Chart', desc:'Farms by study group donut',               selector: '#tab-overview .chart-card:nth-child(2)' },
+  { id:'overview-cmp', label:'Compliance Donut',  desc:'AWD compliance rate donut',                selector: '#tab-overview .chart-card:nth-child(4)' },
+  { id:'overview-bar', label:'Acres Bar Chart',   desc:'Farm acres by group bar chart',            selector: '#tab-overview .chart-card:nth-last-child(2)' },
+  { id:'overview-vil', label:'Village Bars',      desc:'Top villages progress bars',               selector: '#village-bars' },
+];
+const visState = {};
+VIS_CONFIG.forEach(v => visState[v.id] = true);
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
   [FARMS, VILLAGES, STATS] = await Promise.all([
     fetch('/api/farms').then(r=>r.json()),
@@ -470,9 +628,20 @@ async function init() {
   renderOverview();
   renderVillageTab();
   renderFarmList();
+  await checkDevSession();
 }
 
-// ═══ FORCE REFRESH ══════════════════════════════════════════════════════
+async function checkDevSession() {
+  try {
+    const r = await fetch('/api/dev/me');
+    if (r.ok) {
+      const d = await r.json();
+      if (d.ok) setDevUser(d.username);
+    }
+  } catch(e) {}
+}
+
+// ─── FORCE REFRESH ───────────────────────────────────────────────────────────
 async function forceRefresh() {
   const btn = document.querySelector('button[onclick="forceRefresh()"]');
   if (btn) { btn.textContent = '↻ Refreshing…'; btn.disabled = true; }
@@ -487,25 +656,24 @@ async function forceRefresh() {
   if (btn) { btn.textContent = '↻ Refresh'; btn.disabled = false; }
 }
 
-// ═══ TOPBAR ══════════════════════════════════════════════════════════════
+// ─── TOPBAR ──────────────────────────────────────────────────────────────────
 function renderTopbar() {
-  document.getElementById('kv-total').textContent = STATS.total;
-  document.getElementById('kv-a').textContent = STATS.group_a;
-  document.getElementById('kv-b').textContent = STATS.group_b;
-  document.getElementById('kv-c').textContent = STATS.group_c;
-  document.getElementById('kv-comply').textContent = STATS.complied;
-  document.getElementById('kv-pay').textContent = STATS.total_acres.toLocaleString();
-  document.getElementById('kv-villages').textContent = STATS.villages;
+  document.getElementById('kv-total').textContent   = STATS.total;
+  document.getElementById('kv-a').textContent       = STATS.group_a;
+  document.getElementById('kv-b').textContent       = STATS.group_b;
+  document.getElementById('kv-c').textContent       = STATS.group_c;
+  document.getElementById('kv-comply').textContent  = STATS.complied;
+  document.getElementById('kv-pay').textContent     = (STATS.total_acres||0).toLocaleString();
+  document.getElementById('kv-villages').textContent= STATS.villages;
   if (STATS.last_updated) document.getElementById('last-updated').textContent = 'Updated: ' + STATS.last_updated;
   document.getElementById('ml-a').textContent = STATS.group_a;
   document.getElementById('ml-b').textContent = STATS.group_b;
   document.getElementById('ml-c').textContent = STATS.group_c;
 }
 
-// ═══ OVERVIEW TAB ════════════════════════════════════════════════════════
+// ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
 function renderOverview() {
-  // Donut — groups
-  const gData = [STATS.group_a, STATS.group_b, STATS.group_c];
+  const gData   = [STATS.group_a, STATS.group_b, STATS.group_c];
   const gLabels = ['Group A','Group B','Group C'];
   const gColors = [GC.A, GC.B, GC.C];
   donutGroupChart = makeDonut('donut-groups', gData, gLabels, gColors);
@@ -515,41 +683,32 @@ function renderOverview() {
     gl.innerHTML += `<div class="legend-row"><div class="legend-left"><div class="legend-dot" style="background:${gColors[i]}"></div>${l}</div><div class="legend-right" style="color:${gColors[i]}">${gData[i]}</div></div>`;
   });
 
-  // Donut — compliance
-  const cData = [STATS.complied, STATS.not_complied, STATS.total - STATS.complied - STATS.not_complied];
+  const cData   = [STATS.complied, STATS.not_complied, STATS.total - STATS.complied - STATS.not_complied];
   const cLabels = ['Complied','Not Complied','Unknown'];
   const cColors = ['#00e676','#ff5252','#3a5060'];
   donutComplyChart = makeDonut('donut-comply', cData, cLabels, cColors);
-  const pct = Math.round((STATS.complied / (STATS.complied + STATS.not_complied)) * 100);
-  document.getElementById('comply-pct').textContent = pct + '%';
+  const denom = (STATS.complied + STATS.not_complied) || 1;
+  document.getElementById('comply-pct').textContent = Math.round((STATS.complied / denom) * 100) + '%';
   const cl = document.getElementById('comply-legend');
   cLabels.forEach((l,i) => {
     cl.innerHTML += `<div class="legend-row"><div class="legend-left"><div class="legend-dot" style="background:${cColors[i]}"></div>${l}</div><div class="legend-right" style="color:${cColors[i]}">${cData[i]}</div></div>`;
   });
 
-  // Metrics
-  document.getElementById('m-total-acres').textContent = STATS.total_acres.toLocaleString();
-  document.getElementById('m-inc-acres').textContent = STATS.incentive_acres.toLocaleString();
-  document.getElementById('m-villages').textContent = STATS.villages;
+  document.getElementById('m-total-acres').textContent = (STATS.total_acres||0).toLocaleString();
+  document.getElementById('m-inc-acres').textContent   = (STATS.incentive_acres||0).toLocaleString();
+  document.getElementById('m-villages').textContent    = STATS.villages;
 
-  // Bar — acres per group
   const acresA = FARMS.filter(f=>f.group_key==='A').reduce((s,f)=>s+f.acres,0);
   const acresB = FARMS.filter(f=>f.group_key==='B').reduce((s,f)=>s+f.acres,0);
   const acresC = FARMS.filter(f=>f.group_key==='C').reduce((s,f)=>s+f.acres,0);
-  makeBar('bar-acres',
-    ['Group A','Group B','Group C'],
-    [Math.round(acresA), Math.round(acresB), Math.round(acresC)],
-    [GC.A, GC.B, GC.C]
-  );
+  makeBar('bar-acres',['Group A','Group B','Group C'],[Math.round(acresA),Math.round(acresB),Math.round(acresC)],[GC.A,GC.B,GC.C]);
 
-  // Village progress bars
   const top8 = VILLAGES.slice(0, 8);
   const maxV = top8[0]?.total || 1;
   const vp = document.getElementById('village-progress');
   top8.forEach(v => {
     const pct = (v.total / maxV * 100).toFixed(0);
-    const dominant = v.group_a >= v.group_b && v.group_a >= v.group_c ? GC.A
-      : v.group_b >= v.group_c ? GC.B : GC.C;
+    const dominant = v.group_a >= v.group_b && v.group_a >= v.group_c ? GC.A : v.group_b >= v.group_c ? GC.B : GC.C;
     vp.innerHTML += `<div class="progress-row">
       <div class="pr-top"><span class="pr-name">${v.village}</span><span class="pr-val">${v.total} farms · ${Math.round(v.total_acres||0)} ac</span></div>
       <div class="pr-bar"><div class="pr-fill" style="width:${pct}%;background:${dominant}"></div></div>
@@ -561,35 +720,29 @@ function makeDonut(id, data, labels, colors) {
   return new Chart(document.getElementById(id), {
     type: 'doughnut',
     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
-    options: {
-      cutout: '68%', responsive: false, plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` },
-        backgroundColor: '#131920', borderColor: '#1e2a35', borderWidth: 1,
-        titleColor: '#dce8f0', bodyColor: '#5a7385'
-      }}
-    }
+    options: { cutout: '68%', responsive: false, plugins: { legend: { display: false }, tooltip: {
+      callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}` },
+      backgroundColor:'#131920',borderColor:'#1e2a35',borderWidth:1,titleColor:'#dce8f0',bodyColor:'#5a7385'
+    }}}
   });
 }
 
 function makeBar(id, labels, data, colors) {
   return new Chart(document.getElementById(id), {
     type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: colors.map(c => c + '99'), borderColor: colors, borderWidth: 1.5, borderRadius: 4 }] },
-    options: {
-      responsive: true, plugins: { legend: { display: false }, tooltip: {
-        backgroundColor: '#131920', borderColor: '#1e2a35', borderWidth: 1,
-        titleColor: '#dce8f0', bodyColor: '#5a7385',
-        callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} acres` }
-      }},
-      scales: {
-        x: { grid: { color: '#1e2a35' }, ticks: { color: '#5a7385', font: { family: 'JetBrains Mono', size: 11 } } },
-        y: { grid: { color: '#1e2a35' }, ticks: { color: '#5a7385', font: { family: 'JetBrains Mono', size: 11 } } }
-      }
-    }
+    data: { labels, datasets: [{ data, backgroundColor: colors.map(c=>c+'99'), borderColor: colors, borderWidth: 1.5, borderRadius: 4 }] },
+    options: { responsive: true, plugins: { legend: { display: false }, tooltip: {
+      backgroundColor:'#131920',borderColor:'#1e2a35',borderWidth:1,titleColor:'#dce8f0',bodyColor:'#5a7385',
+      callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} acres` }
+    }},
+    scales: {
+      x: { grid: { color: '#1e2a35' }, ticks: { color: '#5a7385', font: { family: 'JetBrains Mono', size: 11 } } },
+      y: { grid: { color: '#1e2a35' }, ticks: { color: '#5a7385', font: { family: 'JetBrains Mono', size: 11 } } }
+    }}
   });
 }
 
-// ═══ VILLAGES TAB ═══════════════════════════════════════════════════════
+// ─── VILLAGES TAB ────────────────────────────────────────────────────────────
 function renderVillageTab() {
   const vt = document.getElementById('village-table');
   const sorted = [...VILLAGES].sort((a,b) => b.total - a.total);
@@ -602,9 +755,8 @@ function renderVillageTab() {
       <th style="text-align:right;padding:6px 4px;color:var(--orange);font-size:10px;font-weight:500">C</th>
       <th style="text-align:right;padding:6px 4px;color:var(--dimmed);font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:500">Acres</th>
     </tr></thead><tbody>`;
-  sorted.forEach((v,i) => {
-    const dominant = v.group_a >= v.group_b && v.group_a >= v.group_c ? 'A'
-      : v.group_b >= v.group_c ? 'B' : 'C';
+  sorted.forEach(v => {
+    const dominant = v.group_a >= v.group_b && v.group_a >= v.group_c ? 'A' : v.group_b >= v.group_c ? 'B' : 'C';
     const dc = GC[dominant];
     html += `<tr style="border-bottom:1px solid var(--border);cursor:pointer;" onclick="jumpToVillage('${v.village.replace(/'/g,"\\'")}')">
       <td style="padding:8px 4px;font-weight:600">${v.village}</td>
@@ -618,7 +770,7 @@ function renderVillageTab() {
   vt.innerHTML = html + '</tbody></table>';
 }
 
-// ═══ FARMS TAB ══════════════════════════════════════════════════════════
+// ─── FARMS TAB ───────────────────────────────────────────────────────────────
 function renderFarmList(farms) {
   farms = farms || getFiltered();
   document.getElementById('list-meta').textContent = `${farms.length} farms`;
@@ -632,14 +784,8 @@ function renderFarmList(farms) {
     div.dataset.id = f.farm_id;
     div.innerHTML = `
       <div class="fr-dot" style="background:${color}"></div>
-      <div class="fr-body">
-        <div class="fr-name">${f.farmer_name}</div>
-        <div class="fr-id">${f.farm_id}</div>
-      </div>
-      <div class="fr-right">
-        <div class="fr-village">${f.village}</div>
-        <div class="fr-acres">${f.acres} ac</div>
-      </div>
+      <div class="fr-body"><div class="fr-name">${f.farmer_name}</div><div class="fr-id">${f.farm_id}</div></div>
+      <div class="fr-right"><div class="fr-village">${f.village}</div><div class="fr-acres">${f.acres} ac</div></div>
       <div class="comply-dot" style="background:${comply}"></div>`;
     div.onclick = () => selectFarm(f.farm_id);
     list.appendChild(div);
@@ -662,7 +808,6 @@ function setPill(g, btn) {
   document.querySelectorAll('.pill').forEach(p => p.className = p.className.replace(/ on/,''));
   btn.className += ' on';
   renderFarmList();
-  // Sync map
   const vis = new Set(getFiltered().map(f => f.farm_id));
   FARMS.forEach(f => {
     const show = vis.has(f.farm_id);
@@ -671,31 +816,22 @@ function setPill(g, btn) {
   });
 }
 
-// ═══ MAP ═════════════════════════════════════════════════════════════════
+// ─── MAP ─────────────────────────────────────────────────────────────────────
 let map;
 function initMap() {
   map = L.map('map', { center: [30.35, 76.35], zoom: 11, zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd', maxZoom: 19
-  }).addTo(map);
-
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
   FARMS.forEach(f => {
     const color = GC[f.group_key];
     const complyColor = f.complied === '1.0' ? '#00e676' : f.complied === '0.0' ? '#ff5252' : '#3a5060';
-    const icon = L.divIcon({
-      html: `<div style="width:11px;height:11px;border-radius:50%;background:${color};border:2px solid ${complyColor};box-shadow:0 0 8px ${color}55;"></div>`,
-      className: '', iconSize: [11,11], iconAnchor: [5,5]
-    });
+    const icon = L.divIcon({ html: `<div style="width:11px;height:11px;border-radius:50%;background:${color};border:2px solid ${complyColor};box-shadow:0 0 8px ${color}55;"></div>`, className:'', iconSize:[11,11], iconAnchor:[5,5] });
     const m = L.marker([f.tw_lat, f.tw_lon], { icon }).addTo(map).on('click', () => selectFarm(f.farm_id));
     markers[f.farm_id] = m;
     if (f.polygon && f.polygon.length > 2) {
-      const poly = L.polygon(f.polygon, {
-        color, weight: 1.5, opacity: 0.7, fillColor: color, fillOpacity: 0.1
-      }).addTo(map).on('click', () => selectFarm(f.farm_id));
+      const poly = L.polygon(f.polygon, { color, weight:1.5, opacity:.7, fillColor:color, fillOpacity:.1 }).addTo(map).on('click', () => selectFarm(f.farm_id));
       polygons[f.farm_id] = poly;
     }
   });
-
   const coords = FARMS.map(f => [f.tw_lat, f.tw_lon]);
   if (coords.length) map.fitBounds(L.latLngBounds(coords).pad(0.05));
 }
@@ -704,49 +840,35 @@ function selectFarm(id) {
   selectedId = id;
   const f = FARMS.find(x => x.farm_id === id);
   if (!f) return;
-
-  // Fly
   map.flyTo([f.tw_lat, f.tw_lon], 16, { duration: 0.9 });
-
-  // Highlight polygon
   Object.entries(polygons).forEach(([fid, poly]) => {
-    const fc = FARMS.find(x => x.farm_id === fid);
-    const c = GC[fc?.group_key || 'A'];
     poly.setStyle({ fillOpacity: fid === id ? 0.45 : 0.1, weight: fid === id ? 3 : 1.5, opacity: fid === id ? 1 : 0.7 });
   });
-
-  // Detail popup
   document.getElementById('dp-name').textContent = f.farmer_name;
-  const gLabel = f.group_key === 'A' ? 'Group A · AWD+Incentive' : f.group_key === 'B' ? 'Group B · AWD+PVC' : 'Group C · PVC Only';
+  const gLabel = f.group_key==='A' ? 'Group A · AWD+Incentive' : f.group_key==='B' ? 'Group B · AWD+PVC' : 'Group C · PVC Only';
   const gColor = GC[f.group_key];
   document.getElementById('dp-badge').innerHTML = `<span class="dp-badge" style="background:${gColor}22;color:${gColor};border:1px solid ${gColor}44">${gLabel}</span>`;
-  document.getElementById('dp-id').textContent = f.farm_id;
+  document.getElementById('dp-id').textContent      = f.farm_id;
   document.getElementById('dp-village').textContent = f.village;
-  document.getElementById('dp-zone').textContent = 'Zone ' + f.zone;
-  document.getElementById('dp-acres').textContent = f.acres + ' acres';
-  document.getElementById('dp-inc').textContent = f.incentive_acres + ' acres';
-  document.getElementById('dp-phone').textContent = f.phone;
+  document.getElementById('dp-zone').textContent    = 'Zone ' + f.zone;
+  document.getElementById('dp-acres').textContent   = f.acres + ' acres';
+  document.getElementById('dp-inc').textContent     = f.incentive_acres + ' acres';
+  document.getElementById('dp-phone').textContent   = f.phone;
   const cEl = document.getElementById('dp-comply');
-  if (f.complied === '1.0') { cEl.className = 'comply-badge cb-yes'; cEl.textContent = '✓ Complied'; }
-  else if (f.complied === '0.0') { cEl.className = 'comply-badge cb-no'; cEl.textContent = '✗ Not Complied'; }
-  else { cEl.className = 'comply-badge cb-na'; cEl.textContent = '? Unknown'; }
+  if (f.complied==='1.0') { cEl.className='comply-badge cb-yes'; cEl.textContent='✓ Complied'; }
+  else if (f.complied==='0.0') { cEl.className='comply-badge cb-no'; cEl.textContent='✗ Not Complied'; }
+  else { cEl.className='comply-badge cb-na'; cEl.textContent='? Unknown'; }
   document.getElementById('detail-popup').classList.add('open');
-
-  // Sync list
   document.querySelectorAll('.farm-row').forEach(el => el.classList.toggle('sel', el.dataset.id === id));
   const el = document.querySelector(`.farm-row[data-id="${id}"]`);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 function closeDetail() {
   document.getElementById('detail-popup').classList.remove('open');
   selectedId = null;
   document.querySelectorAll('.farm-row').forEach(el => el.classList.remove('sel'));
-  Object.entries(polygons).forEach(([fid, poly]) => {
-    const fc = FARMS.find(x => x.farm_id === fid);
-    const c = GC[fc?.group_key || 'A'];
-    poly.setStyle({ fillOpacity: 0.1, weight: 1.5, opacity: 0.7 });
-  });
+  Object.entries(polygons).forEach(([fid, poly]) => { poly.setStyle({ fillOpacity:.1, weight:1.5, opacity:.7 }); });
 }
 
 function mapSearch(q) {
@@ -759,20 +881,212 @@ function mapSearch(q) {
 function jumpToVillage(village) {
   const farms = FARMS.filter(f => f.village === village);
   if (!farms.length) return;
-  const coords = farms.map(f => [f.tw_lat, f.tw_lon]);
-  map.fitBounds(L.latLngBounds(coords).pad(0.1));
+  map.fitBounds(L.latLngBounds(farms.map(f=>[f.tw_lat,f.tw_lon])).pad(0.1));
   switchTab('farms', document.querySelectorAll('.tab-btn')[2]);
   document.getElementById('farm-search').value = village;
   filterFarms();
 }
 
-// ═══ TABS ═════════════════════════════════════════════════════════════
+// ─── TABS ─────────────────────────────────────────────────────────────────────
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════════════════════
+function openLoginModal() {
+  document.getElementById('lm-user').value = '';
+  document.getElementById('lm-pass').value = '';
+  document.getElementById('lm-error').textContent = '';
+  document.getElementById('lm-user').classList.remove('error');
+  document.getElementById('lm-pass').classList.remove('error');
+  document.getElementById('login-modal').classList.add('open');
+  setTimeout(() => document.getElementById('lm-user').focus(), 200);
+}
+
+function closeLoginModal() {
+  document.getElementById('login-modal').classList.remove('open');
+}
+
+async function doLogin() {
+  const username = document.getElementById('lm-user').value.trim();
+  const password = document.getElementById('lm-pass').value.trim();
+  const errEl = document.getElementById('lm-error');
+  const btn   = document.getElementById('lm-btn');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Please enter both username and password.'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const r = await fetch('/api/dev/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      setDevUser(d.username);
+      closeLoginModal();
+    } else {
+      errEl.textContent = 'Invalid username or password.';
+      document.getElementById('lm-user').classList.add('error');
+      document.getElementById('lm-pass').classList.add('error');
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Try again.';
+  }
+  btn.disabled = false; btn.textContent = 'Sign In';
+}
+
+function setDevUser(username) {
+  DEV_USER = username;
+  document.getElementById('dev-badge').classList.add('visible');
+  document.getElementById('dev-badge-name').textContent = username;
+  document.getElementById('login-btn').style.display = 'none';
+  document.getElementById('dp-user-label').textContent = 'Logged in as ' + username;
+}
+
+async function doLogout() {
+  await fetch('/api/dev/logout', { method: 'POST' });
+  DEV_USER = null;
+  RAW_DATA = { awd: null, lib: null };
+  document.getElementById('dev-badge').classList.remove('visible');
+  document.getElementById('login-btn').style.display = '';
+  closeDevPanel();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DEV PANEL
+// ══════════════════════════════════════════════════════════════════════════════
+function openDevPanel() {
+  document.getElementById('dev-panel').classList.add('open');
+  renderVisGrid();
+  // Trigger lazy load of raw data
+  if (!RAW_DATA.awd) loadRawTables();
+}
+
+function closeDevPanel() {
+  document.getElementById('dev-panel').classList.remove('open');
+}
+
+function switchDevTab(name, btn) {
+  document.querySelectorAll('.dp-tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.dp-tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('devtab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Visibility toggles ────────────────────────────────────────────────────────
+function renderVisGrid() {
+  const grid = document.getElementById('vis-grid');
+  grid.innerHTML = '';
+  VIS_CONFIG.forEach(v => {
+    const on = visState[v.id];
+    const card = document.createElement('div');
+    card.className = 'vis-card';
+    card.innerHTML = `
+      <div class="vis-card-info">
+        <div class="vis-card-name">${v.label}</div>
+        <div class="vis-card-desc">${v.desc}</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" ${on ? 'checked' : ''} onchange="toggleVis('${v.id}', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>`;
+    grid.appendChild(card);
+  });
+}
+
+function toggleVis(id, on) {
+  visState[id] = on;
+  const cfg = VIS_CONFIG.find(v => v.id === id);
+  if (!cfg) return;
+  const el = document.querySelector(cfg.selector);
+  if (el) {
+    el.style.display = on ? '' : 'none';
+    // If hiding the analytics panel, expand map
+    if (id === 'analytics') {
+      document.querySelector('.body').style.gridTemplateColumns = on ? '400px 1fr' : '0 1fr';
+    }
+  }
+}
+
+// ── Raw tables ────────────────────────────────────────────────────────────────
+async function loadRawTables() {
+  try {
+    const r = await fetch('/api/dev/raw_tables');
+    if (!r.ok) { console.error('Raw tables auth failed'); return; }
+    const d = await r.json();
+    RAW_DATA.awd = d.awd;
+    RAW_DATA.lib = d.lib;
+    renderRawTable('awd');
+    renderRawTable('lib');
+  } catch(e) {
+    console.error('Raw tables error:', e);
+  }
+}
+
+let rawSort = { awd: { col: null, dir: 1 }, lib: { col: null, dir: 1 } };
+
+function renderRawTable(which) {
+  const data    = RAW_DATA[which];
+  const area    = document.getElementById(`raw-${which}-area`);
+  const loading = document.getElementById(`raw-${which}-loading`);
+  const countEl = document.getElementById(`raw-${which}-count`);
+  if (!data || !data.rows.length) {
+    if (loading) loading.style.display = 'flex';
+    return;
+  }
+  if (loading) loading.style.display = 'none';
+
+  const q = (document.getElementById(`raw-${which}-search`)?.value || '').toLowerCase();
+  let rows = data.rows;
+  if (q) rows = rows.filter(row => Object.values(row).some(v => String(v).toLowerCase().includes(q)));
+
+  const sc = rawSort[which];
+  if (sc.col) {
+    rows = [...rows].sort((a,b) => {
+      const va = a[sc.col] || '', vb = b[sc.col] || '';
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb)) return sc.dir * (na - nb);
+      return sc.dir * String(va).localeCompare(String(vb));
+    });
+  }
+
+  countEl.textContent = `${rows.length} / ${data.count} rows`;
+
+  const cols = data.columns;
+  let html = `<div class="table-wrap"><table class="raw-table"><thead><tr>`;
+  cols.forEach(c => {
+    const sorted = sc.col === c;
+    const arrow = sorted ? (sc.dir===1 ? ' ↑' : ' ↓') : '';
+    html += `<th class="${sorted?'sorted':''}" onclick="sortRaw('${which}','${c.replace(/'/g,"\\'")}')">
+      ${c}${arrow}
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>' + cols.map(c => `<td title="${String(row[c]||'').replace(/"/g,'&quot;')}">${row[c]||''}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+function filterRawTable(which) { renderRawTable(which); }
+
+function sortRaw(which, col) {
+  const sc = rawSort[which];
+  if (sc.col === col) sc.dir *= -1;
+  else { sc.col = col; sc.dir = 1; }
+  renderRawTable(which);
+}
+
+// Close modal on overlay click
+document.getElementById('login-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeLoginModal();
+});
 
 init();
 </script>
