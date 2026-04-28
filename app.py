@@ -4,14 +4,16 @@ import csv, io, os, re, time, threading, logging, requests
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-AWD_URL = "https://docs.google.com/spreadsheets/d/180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k/export?format=csv&gid=1066902470"
-LIB_URL = "https://docs.google.com/spreadsheets/d/14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA/export?format=csv&gid=825105755"
+# Published CSV URLs (no auth required)
+AWD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRk1lqKuks4K3MXtX8cZAOSR-ESLK3D8NvTuKRVpWzNVunYYaUgqsBrasiSOKWl49LfPM2uTZwaW3UD/pub?gid=1066902470&single=true&output=csv"
+LIB_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSmv6Sq_o-w_zH7gQQxQakTbjxbO95ORl995an6iEYEwN-SiLHEsTyUHMAjmaIT9NZGX5qndns_bQA3/pub?gid=2142859508&single=true&output=csv"
 
 _cache = {"data": None, "ts": 0}
 CACHE_TTL = 300
 
 def fetch_csv(url):
-    r = requests.get(url, timeout=30)
+    headers = {"User-Agent": "Mozilla/5.0"}
+    r = requests.get(url, timeout=30, headers=headers)
     r.raise_for_status()
     return list(csv.DictReader(io.StringIO(r.text)))
 
@@ -22,29 +24,8 @@ def find_col(row_dict, keywords):
                 return col
     return None
 
-def extract_fallback_id(s):
-    if not s: return None
-    s = str(s).strip()
-    if not s.startswith('='):
-        return s if s else None
-    m = re.search(r'"([A-Z]{2}_[A-Z]{2}_[A-Z]{2}_\w+_PLT_[\w+]+)"\)', s)
-    return m.group(1) if m else None
-
-def parse_wkt_geometry(wkt):
-    if not wkt: return None, None, []
-    wkt = str(wkt).strip()
-    if wkt.startswith('POINT'):
-        c = re.findall(r'([\d.]+)\s+([\d.]+)', wkt)
-        if c: return float(c[0][1]), float(c[0][0]), []
-    if wkt.startswith('POLYGON'):
-        c = re.findall(r'([\d.]+)\s+([\d.]+)\s+[\d.]+', c)
-        if c:
-            poly = [[float(x[1]), float(x[0])] for x in c]
-            lats = [p[0] for p in poly]; lons = [p[1] for p in poly]
-            return sum(lats)/len(lats), sum(lons)/len(lons), poly
-    return None, None, []
-
-def parse_simplified_polygon(s):
+def parse_simplified(s):
+    """Parse 'lat lon alt 0.0; lat lon alt 0.0; ...' into [[lat,lon], ...]"""
     if not s: return []
     coords = []
     for seg in str(s).split(';'):
@@ -58,6 +39,7 @@ def groupkey(g):
     g = str(g).strip().upper()
     if 'GROUP A' in g or g == 'A': return 'A'
     if 'GROUP B' in g or g == 'B': return 'B'
+    if 'GROUP C' in g or g == 'C': return 'C'
     return 'C'
 
 def safe_float(v):
@@ -73,14 +55,20 @@ def normalise_comply(v):
 def fetch_and_process():
     logging.info("Fetching from Google Sheets...")
     try:
+        # ── Fetch AWD sheet ──────────────────────────────────────────────
         awd_rows = fetch_csv(AWD_URL)
         if not awd_rows: return None
         awd_rows = [{k.strip(): v for k, v in row.items()} for row in awd_rows]
         logging.info(f"AWD rows: {len(awd_rows)}")
 
+        # ── Fetch Libertalia master_control ──────────────────────────────
         lib_rows = fetch_csv(LIB_URL)
+        if not lib_rows: return None
+        lib_rows = [{k.strip(): v for k, v in row.items()} for row in lib_rows]
         logging.info(f"Libertalia rows: {len(lib_rows)}")
+        logging.info(f"Libertalia columns: {list(lib_rows[0].keys())[:10]}")
 
+        # ── Find AWD columns ─────────────────────────────────────────────
         s = awd_rows[0]
         awd_id_col  = find_col(s, ['farm id','farm_id'])
         farmer_col  = find_col(s, ['farmer name','farmer_name'])
@@ -93,39 +81,49 @@ def fetch_and_process():
         comply_col  = find_col(s, ['bank details verified','consent signed','complied'])
         logging.info(f"AWD cols: id={awd_id_col}, group={group_col}, comply={comply_col}")
 
-        ls = lib_rows[0] if lib_rows else {}
-        lib_keys = list(ls.keys())
-        lib_id_col   = find_col(ls, ['kharif 25 farm id','farm id','farm_id']) or (lib_keys[4] if len(lib_keys) > 4 else None)
-        lib_wkt_col  = find_col(ls, ['wkt']) or (lib_keys[1] if len(lib_keys) > 1 else None)
-        lib_simp_col = find_col(ls, ['simplified']) or (lib_keys[2] if len(lib_keys) > 2 else None)
-        lib_id2_col  = lib_keys[10] if len(lib_keys) > 10 else None
-        logging.info(f"Lib cols: id={lib_id_col}, wkt={lib_wkt_col}, simp={lib_simp_col}, id2={lib_id2_col}")
+        # ── Find Libertalia columns ──────────────────────────────────────
+        ls = lib_rows[0]
+        lib_id_col   = find_col(ls, ['plot code','farm id','farm_id'])
+        lib_poly_col = find_col(ls, ['polygon','polygons'])
+        lib_tw_col   = find_col(ls, ['tw location','tubewell location','tw_location'])
+        logging.info(f"Lib cols: id={lib_id_col}, poly={lib_poly_col}, tw={lib_tw_col}")
 
+        # ── Build geo index from master_control ──────────────────────────
         lib_index = {}
         for row in lib_rows:
-            wkt  = row.get(lib_wkt_col, '') or ''
-            simp = row.get(lib_simp_col, '') or ''
-            tw_lat, tw_lon, wkt_poly = parse_wkt_geometry(wkt)
-            if tw_lat is None: continue
-            poly = parse_simplified_polygon(simp) or wkt_poly
-            geo  = {'tw_lat': tw_lat, 'tw_lon': tw_lon, 'polygon': poly}
+            fid = str(row.get(lib_id_col, '') or '').strip()
+            if not fid or fid.startswith('='): continue
 
-            fid1 = str(row.get(lib_id_col, '') or '').strip()
-            if fid1 and not fid1.startswith('='):
-                lib_index[fid1] = geo
+            poly_str = str(row.get(lib_poly_col, '') or '')
+            tw_str   = str(row.get(lib_tw_col, '') or '')
 
-            fid2 = extract_fallback_id(row.get(lib_id2_col, ''))
-            if fid2 and fid2 != fid1:
-                lib_index[fid2] = geo
+            poly = parse_simplified(poly_str)
+            tw   = parse_simplified(tw_str)
+
+            # TW location for map marker; fall back to polygon centroid
+            if tw:
+                tw_lat, tw_lon = tw[0][0], tw[0][1]
+            elif poly:
+                lats = [p[0] for p in poly]
+                lons = [p[1] for p in poly]
+                tw_lat = sum(lats)/len(lats)
+                tw_lon = sum(lons)/len(lons)
+            else:
+                continue
+
+            lib_index[fid] = {'tw_lat': tw_lat, 'tw_lon': tw_lon, 'polygon': poly}
 
         logging.info(f"Geo index: {len(lib_index)} farms")
 
+        # ── Build farm records ───────────────────────────────────────────
         records = []
         skipped = 0
         for row in awd_rows:
             fid = str(row.get(awd_id_col, '') or '').strip()
             if not fid: continue
-            if fid not in lib_index: skipped += 1; continue
+            if fid not in lib_index:
+                skipped += 1
+                continue
             geo = lib_index[fid]
             group_val = row.get(group_col, '') if group_col else ''
             records.append({
@@ -147,6 +145,7 @@ def fetch_and_process():
 
         logging.info(f"Records: {len(records)}, skipped: {skipped}")
 
+        # ── Village stats ────────────────────────────────────────────────
         village_map = {}
         for f in records:
             v = f['village']
@@ -158,6 +157,7 @@ def fetch_and_process():
             village_map[v]['incentive_acres'] += f['incentive_acres']
         villages = sorted(village_map.values(), key=lambda x: -x['total'])
 
+        # ── Stats ────────────────────────────────────────────────────────
         total    = len(records)
         group_a  = sum(1 for f in records if f['group_key']=='A')
         group_b  = sum(1 for f in records if f['group_key']=='B')
