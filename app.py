@@ -1,11 +1,11 @@
-from flask import Flask, render_template, jsonify
-import csv, io, os, re, time, threading, logging, requests
+from flask import Flask, render_template, jsonify, request, session
+import csv, io, os, re, time, threading, logging, requests, hashlib
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'awd-dashboard-secret-2025')
 logging.basicConfig(level=logging.INFO)
 
 # ── Published /e/2PACX-... URLs ───────────────────────────────────────────────
-# These are from File → Share → Publish to web. /export?format=csv gives 401.
 AWD_URL = (
     "https://docs.google.com/spreadsheets/d/e/"
     "2PACX-1vRk1lqKuks4K3MXtX8cZA0SR-ESLK3D8NvTuKRVpWzNVunYYaUgqsBrasiSOKWl49LfPM2uTZwaW3UD"
@@ -17,8 +17,17 @@ LIB_URL = (
     "/pub?gid=2142859508&single=true&output=csv"
 )
 
-_cache = {"data": None, "ts": 0}
-CACHE_TTL = 60  # live updates every 60 seconds
+# ── Dev credentials (SHA-256 hashed) ─────────────────────────────────────────
+def _h(s): return hashlib.sha256(s.encode()).hexdigest()
+
+DEV_USERS = {
+    "Satyamyadav19125": _h("finnwolfhard@666"),
+    "Danetgar":         _h("Etgardan"),
+}
+
+_cache     = {"data": None, "ts": 0}
+_raw_cache = {"awd": None, "lib": None, "ts": 0}
+CACHE_TTL  = 60
 
 def fetch_csv(url):
     headers = {"User-Agent": "Mozilla/5.0 (compatible; AWDDashboard/1.0)"}
@@ -66,7 +75,6 @@ def parse_simplified_polygon(s):
     return coords
 
 def parse_tw_location(raw):
-    """Parse 'lat lon' decimal or DMS string into (lat, lon)."""
     if not raw or str(raw).strip() in ('', 'nan', 'None'): return None, None
     raw = str(raw).strip()
     parts = raw.split()
@@ -110,7 +118,6 @@ def fetch_and_process():
         lib_rows = [{k.strip(): v for k, v in row.items()} for row in lib_rows]
         logging.info(f"Libertalia rows: {len(lib_rows)}")
 
-        # ── AWD column detection ──────────────────────────────────────────────
         s = awd_rows[0]
         awd_id_col  = find_col(s, ['farm id','farm_id'])
         farmer_col  = find_col(s, ['farmer name','farmer_name'])
@@ -123,59 +130,39 @@ def fetch_and_process():
         comply_col  = find_col(s, ['bank details verified','consent signed','complied'])
         logging.info(f"AWD cols → id={awd_id_col} group={group_col} comply={comply_col}")
 
-        # ── Libertalia master_control column detection ────────────────────────
         ls = lib_rows[0] if lib_rows else {}
         lib_keys = list(ls.keys())
-        logging.info(f"Libertalia columns: {lib_keys[:15]}")
-
         lib_id_col   = find_col(ls, ['plot code','farm id','farm_id']) or (lib_keys[0] if lib_keys else None)
         lib_poly_col = find_col(ls, ['polygon','polygons'])
         lib_tw_col   = find_col(ls, ['tw location','tw_location'])
         lib_wkt_col  = find_col(ls, ['wkt'])
         lib_simp_col = find_col(ls, ['simplified'])
-
-        # Positional fallbacks if column names not found
         if not lib_wkt_col  and len(lib_keys) > 1: lib_wkt_col  = lib_keys[1]
         if not lib_simp_col and len(lib_keys) > 2: lib_simp_col = lib_keys[2]
+        logging.info(f"Lib cols → id={lib_id_col} poly={lib_poly_col} tw={lib_tw_col}")
 
-        logging.info(f"Lib cols → id={lib_id_col} poly={lib_poly_col} tw={lib_tw_col} wkt={lib_wkt_col} simp={lib_simp_col}")
-
-        # ── Build geo index from Libertalia ───────────────────────────────────
         lib_index = {}
         for row in lib_rows:
             poly = []
             tw_lat, tw_lon = None, None
-
-            # Priority 1: polygon + tw location columns (master_control format)
             if lib_poly_col:
                 poly = parse_simplified_polygon(row.get(lib_poly_col, ''))
             if lib_tw_col:
                 tw_lat, tw_lon = parse_tw_location(row.get(lib_tw_col, ''))
-
-            # Priority 2: WKT column fallback
             if tw_lat is None and lib_wkt_col:
                 wkt = row.get(lib_wkt_col, '') or ''
                 tw_lat, tw_lon, wkt_poly = parse_wkt_geometry(wkt)
                 if not poly: poly = wkt_poly
-
-            # Priority 3: simplified polygon fallback
             if not poly and lib_simp_col:
                 poly = parse_simplified_polygon(row.get(lib_simp_col, ''))
-
             if tw_lat is None: continue
-
-            # Use polygon centroid as map center if polygon exists
             if poly:
                 lats = [p[0] for p in poly]; lons = [p[1] for p in poly]
-                tw_lat = sum(lats)/len(lats)
-                tw_lon = sum(lons)/len(lons)
-
+                tw_lat = sum(lats)/len(lats); tw_lon = sum(lons)/len(lons)
             geo = {'tw_lat': tw_lat, 'tw_lon': tw_lon, 'polygon': poly}
-
             fid1 = str(row.get(lib_id_col, '') or '').strip()
             if fid1 and not fid1.startswith('='):
                 lib_index[fid1] = geo
-
             lib_id2_col = lib_keys[10] if len(lib_keys) > 10 else None
             fid2 = extract_fallback_id(row.get(lib_id2_col, '')) if lib_id2_col else None
             if fid2 and fid2 != fid1:
@@ -183,7 +170,6 @@ def fetch_and_process():
 
         logging.info(f"Geo index: {len(lib_index)} farms")
 
-        # ── Build farm records ────────────────────────────────────────────────
         records = []
         skipped = 0
         for row in awd_rows:
@@ -238,7 +224,7 @@ def fetch_and_process():
             'total_payment':0,'villages':len(villages),
             'last_updated':time.strftime('%d %b %Y, %H:%M UTC',time.gmtime()),
         }
-        logging.info(f"Done: {total} farms | A={group_a} B={group_b} C={group_c} | complied={complied}")
+        logging.info(f"Done: {total} farms | A={group_a} B={group_b} C={group_c}")
         return {'farms':records,'villages':villages,'stats':stats}
 
     except Exception as e:
@@ -255,12 +241,37 @@ def get_data():
             _cache['ts']   = now
     return _cache['data']
 
+def fetch_raw_tables():
+    """Fetch full raw CSV tables for developer view."""
+    now = time.time()
+    if _raw_cache['awd'] and (now - _raw_cache['ts']) < 300:
+        return _raw_cache['awd'], _raw_cache['lib']
+    try:
+        awd_rows = fetch_csv(AWD_URL)
+        awd_rows = [{k.strip(): v for k, v in row.items()} for row in awd_rows]
+    except Exception as e:
+        logging.error(f"Raw AWD fetch: {e}"); awd_rows = []
+    try:
+        lib_rows = fetch_csv(LIB_URL)
+        lib_rows = [{k.strip(): v for k, v in row.items()} for row in lib_rows]
+    except Exception as e:
+        logging.error(f"Raw LIB fetch: {e}"); lib_rows = []
+    _raw_cache['awd'] = awd_rows
+    _raw_cache['lib'] = lib_rows
+    _raw_cache['ts']  = now
+    return awd_rows, lib_rows
+
 def warmup():
     time.sleep(2)
     get_data()
 
 threading.Thread(target=warmup, daemon=True).start()
 
+# ── Auth helpers ──────────────────────────────────────────────────────────────
+def is_dev():
+    return session.get('dev_user') in DEV_USERS
+
+# ── Public routes ─────────────────────────────────────────────────────────────
 @app.route('/')
 def index(): return render_template('index.html')
 
@@ -284,6 +295,41 @@ def refresh():
 
 @app.route('/health')
 def health(): return jsonify({'status':'ok','ts':time.time()})
+
+# ── Developer auth routes ─────────────────────────────────────────────────────
+@app.route('/api/dev/login', methods=['POST'])
+def dev_login():
+    data = request.get_json(force=True)
+    username = (data.get('username') or '').strip()
+    password = (data.get('password') or '').strip()
+    if username in DEV_USERS and DEV_USERS[username] == _h(password):
+        session['dev_user'] = username
+        session.permanent = True
+        return jsonify({'ok': True, 'username': username})
+    return jsonify({'ok': False, 'error': 'Invalid credentials'}), 401
+
+@app.route('/api/dev/logout', methods=['POST'])
+def dev_logout():
+    session.pop('dev_user', None)
+    return jsonify({'ok': True})
+
+@app.route('/api/dev/me')
+def dev_me():
+    if is_dev():
+        return jsonify({'ok': True, 'username': session['dev_user']})
+    return jsonify({'ok': False}), 401
+
+@app.route('/api/dev/raw_tables')
+def dev_raw_tables():
+    if not is_dev():
+        return jsonify({'error': 'Unauthorized'}), 401
+    awd_rows, lib_rows = fetch_raw_tables()
+    awd_cols = list(awd_rows[0].keys()) if awd_rows else []
+    lib_cols = list(lib_rows[0].keys()) if lib_rows else []
+    return jsonify({
+        'awd': {'columns': awd_cols, 'rows': awd_rows, 'count': len(awd_rows)},
+        'lib': {'columns': lib_cols, 'rows': lib_rows, 'count': len(lib_rows)},
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
