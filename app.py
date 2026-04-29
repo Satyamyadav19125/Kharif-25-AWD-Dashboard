@@ -5,22 +5,23 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'awd-dashboard-secret-2025')
 logging.basicConfig(level=logging.INFO)
 
-# ── Google Sheets IDs ─────────────────────────────────────────────────────────
+# ── Sheet IDs ─────────────────────────────────────────────────────────────────
 AWD_SHEET_ID = "180I8ouxANsp9uszgHrKNfxMscA0LmHYlaOJzJsFn75k"
 LIB_SHEET_ID = "14ah-7Ah690oeOXE5vT8p701LYv7PiEMx_xZycNOOrSA"
 
-AWD_GID = "1066902470"
-LIB_GID = "2142859508"
+# The specific tabs used by the live dashboard
+AWD_DASHBOARD_GID = "1066902470"   # AWD Offers: Agreed And Refused
+LIB_DASHBOARD_GID = "2142859508"   # master_control
 
 AWD_URL = (
     "https://docs.google.com/spreadsheets/d/e/"
     "2PACX-1vRk1lqKuks4K3MXtX8cZA0SR-ESLK3D8NvTuKRVpWzNVunYYaUgqsBrasiSOKWl49LfPM2uTZwaW3UD"
-    f"/pub?gid={AWD_GID}&single=true&output=csv"
+    f"/pub?gid={AWD_DASHBOARD_GID}&single=true&output=csv"
 )
 LIB_URL = (
     "https://docs.google.com/spreadsheets/d/e/"
     "2PACX-1vSmv6Sq_o-w_zH7gQQxQakTbjxbO95ORl995an6iEYEwN-SiLHEsTyUHMAjmaIT9NZGX5qndns_bQA3"
-    f"/pub?gid={LIB_GID}&single=true&output=csv"
+    f"/pub?gid={LIB_DASHBOARD_GID}&single=true&output=csv"
 )
 
 # ── Dev credentials ───────────────────────────────────────────────────────────
@@ -30,7 +31,7 @@ DEV_USERS = {
     "Danetgar":         _h("Etgardan"),
 }
 
-# ── gspread client (lazy init) ────────────────────────────────────────────────
+# ── gspread client ────────────────────────────────────────────────────────────
 _gs_client = None
 
 def get_gs_client():
@@ -44,12 +45,10 @@ def get_gs_client():
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive",
         ]
-        # Load from env var (JSON string) or fallback file
         creds_json = os.environ.get('GOOGLE_CREDENTIALS')
         if creds_json:
             info = json.loads(creds_json)
         else:
-            # Local dev fallback: place JSON next to app.py
             with open('google_credentials.json') as f:
                 info = json.load(f)
         creds = Credentials.from_service_account_info(info, scopes=scopes)
@@ -60,25 +59,34 @@ def get_gs_client():
         logging.error(f"gspread init failed: {e}")
         return None
 
-def get_worksheet(sheet_id, gid):
-    """Return gspread worksheet by sheet_id + numeric gid."""
+def get_spreadsheet(sheet_id):
     gc = get_gs_client()
-    if not gc:
-        return None
+    if not gc: return None
     try:
-        sh = gc.open_by_key(sheet_id)
+        return gc.open_by_key(sheet_id)
+    except Exception as e:
+        logging.error(f"open_by_key error: {e}")
+        return None
+
+def get_worksheet_by_gid(sheet_id, gid):
+    sh = get_spreadsheet(sheet_id)
+    if not sh: return None
+    try:
         for ws in sh.worksheets():
             if str(ws.id) == str(gid):
                 return ws
-        return sh.get_worksheet(0)
+        return None
     except Exception as e:
-        logging.error(f"get_worksheet error: {e}")
+        logging.error(f"get_worksheet_by_gid error: {e}")
         return None
 
 # ── Caches ────────────────────────────────────────────────────────────────────
-_cache     = {"data": None, "ts": 0}
-_raw_cache = {"awd": None, "lib": None, "ts": 0}
-CACHE_TTL  = 60
+_cache        = {"data": None, "ts": 0}
+_tabs_cache   = {"awd": None, "lib": None, "ts": 0}
+_sheet_cache  = {}   # key: "sheetid:gid" → {columns, rows, count, ts}
+CACHE_TTL     = 60
+SHEET_TTL     = 120
+TABS_TTL      = 300
 
 # ── CSV helpers ───────────────────────────────────────────────────────────────
 def fetch_csv(url):
@@ -97,8 +105,7 @@ def find_col(row_dict, keywords):
 def extract_fallback_id(s):
     if not s: return None
     s = str(s).strip()
-    if not s.startswith('='):
-        return s if s else None
+    if not s.startswith('='): return s if s else None
     m = re.search(r'"([A-Z]{2}_[A-Z]{2}_[A-Z]{2}_\w+_PLT_[\w+]+)"\)', s)
     return m.group(1) if m else None
 
@@ -158,14 +165,13 @@ def normalise_comply(v):
     if v in ('0','0.0','no','No','NO','N','n'): return '0.0'
     return v
 
-# ── Main data processing ──────────────────────────────────────────────────────
+# ── Main dashboard data ───────────────────────────────────────────────────────
 def fetch_and_process():
-    logging.info("Fetching from Google Sheets...")
+    logging.info("Fetching dashboard data...")
     try:
         awd_rows = fetch_csv(AWD_URL)
         if not awd_rows: return None
         awd_rows = [{k.strip(): v for k, v in row.items()} for row in awd_rows]
-
         lib_rows = fetch_csv(LIB_URL)
         lib_rows = [{k.strip(): v for k, v in row.items()} for row in lib_rows]
 
@@ -193,44 +199,42 @@ def fetch_and_process():
         lib_index = {}
         for row in lib_rows:
             poly = []; tw_lat, tw_lon = None, None
-            if lib_poly_col: poly = parse_simplified_polygon(row.get(lib_poly_col, ''))
-            if lib_tw_col:   tw_lat, tw_lon = parse_tw_location(row.get(lib_tw_col, ''))
+            if lib_poly_col: poly = parse_simplified_polygon(row.get(lib_poly_col,''))
+            if lib_tw_col:   tw_lat, tw_lon = parse_tw_location(row.get(lib_tw_col,''))
             if tw_lat is None and lib_wkt_col:
-                wkt = row.get(lib_wkt_col, '') or ''
+                wkt = row.get(lib_wkt_col,'') or ''
                 tw_lat, tw_lon, wkt_poly = parse_wkt_geometry(wkt)
                 if not poly: poly = wkt_poly
             if not poly and lib_simp_col:
-                poly = parse_simplified_polygon(row.get(lib_simp_col, ''))
+                poly = parse_simplified_polygon(row.get(lib_simp_col,''))
             if tw_lat is None: continue
             if poly:
-                lats = [p[0] for p in poly]; lons = [p[1] for p in poly]
-                tw_lat = sum(lats)/len(lats); tw_lon = sum(lons)/len(lons)
-            geo = {'tw_lat': tw_lat, 'tw_lon': tw_lon, 'polygon': poly}
-            fid1 = str(row.get(lib_id_col, '') or '').strip()
+                lats=[p[0] for p in poly]; lons=[p[1] for p in poly]
+                tw_lat=sum(lats)/len(lats); tw_lon=sum(lons)/len(lons)
+            geo = {'tw_lat':tw_lat,'tw_lon':tw_lon,'polygon':poly}
+            fid1 = str(row.get(lib_id_col,'') or '').strip()
             if fid1 and not fid1.startswith('='): lib_index[fid1] = geo
-            lib_id2_col = lib_keys[10] if len(lib_keys) > 10 else None
-            fid2 = extract_fallback_id(row.get(lib_id2_col, '')) if lib_id2_col else None
+            lib_id2_col = lib_keys[10] if len(lib_keys)>10 else None
+            fid2 = extract_fallback_id(row.get(lib_id2_col,'')) if lib_id2_col else None
             if fid2 and fid2 != fid1: lib_index[fid2] = geo
 
         records = []
-        skipped = 0
         for row in awd_rows:
-            fid = str(row.get(awd_id_col, '') or '').strip()
-            if not fid: continue
-            if fid not in lib_index: skipped += 1; continue
+            fid = str(row.get(awd_id_col,'') or '').strip()
+            if not fid or fid not in lib_index: continue
             geo = lib_index[fid]
-            group_val = row.get(group_col, '') if group_col else ''
+            group_val = row.get(group_col,'') if group_col else ''
             records.append({
                 'farm_id':         fid,
-                'farmer_name':     row.get(farmer_col, '')  if farmer_col  else '',
-                'village':         row.get(village_col, '') if village_col else '',
+                'farmer_name':     row.get(farmer_col,'')  if farmer_col  else '',
+                'village':         row.get(village_col,'') if village_col else '',
                 'group':           group_val,
                 'group_key':       groupkey(group_val),
-                'zone':            row.get(zone_col, '')    if zone_col    else '',
-                'acres':           safe_float(row.get(acres_col, 0)  if acres_col else 0),
-                'incentive_acres': safe_float(row.get(inc_col, 0)    if inc_col   else 0),
-                'phone':           row.get(phone_col, '')   if phone_col   else '',
-                'complied':        normalise_comply(row.get(comply_col, '') if comply_col else ''),
+                'zone':            row.get(zone_col,'')    if zone_col    else '',
+                'acres':           safe_float(row.get(acres_col,0) if acres_col else 0),
+                'incentive_acres': safe_float(row.get(inc_col,0)   if inc_col   else 0),
+                'phone':           row.get(phone_col,'')   if phone_col   else '',
+                'complied':        normalise_comply(row.get(comply_col,'') if comply_col else ''),
                 'total_payment':   0,
                 'tw_lat':          geo['tw_lat'],
                 'tw_lon':          geo['tw_lon'],
@@ -266,7 +270,7 @@ def fetch_and_process():
         }
         return {'farms':records,'villages':villages,'stats':stats}
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logging.error(f"fetch_and_process error: {e}")
         import traceback; traceback.print_exc()
         return None
 
@@ -279,46 +283,59 @@ def get_data():
             _cache['ts']   = now
     return _cache['data']
 
-def fetch_raw_tables():
-    """Fetch full raw tables via gspread for accurate row indices."""
+# ── Tab listing ───────────────────────────────────────────────────────────────
+def get_all_tabs(which):
+    """Return list of {gid, title} for all tabs in the sheet."""
     now = time.time()
-    if _raw_cache['awd'] and (now - _raw_cache['ts']) < 120:
-        return _raw_cache['awd'], _raw_cache['lib']
+    if _tabs_cache[which] and (now - _tabs_cache['ts']) < TABS_TTL:
+        return _tabs_cache[which]
+    sheet_id = AWD_SHEET_ID if which == 'awd' else LIB_SHEET_ID
+    sh = get_spreadsheet(sheet_id)
+    if not sh:
+        return []
+    try:
+        tabs = [{'gid': str(ws.id), 'title': ws.title} for ws in sh.worksheets()]
+        _tabs_cache[which] = tabs
+        _tabs_cache['ts']  = now
+        return tabs
+    except Exception as e:
+        logging.error(f"get_all_tabs error: {e}")
+        return []
 
-    def via_gspread(sheet_id, gid):
-        ws = get_worksheet(sheet_id, gid)
-        if not ws:
-            return None
+# ── Per-tab data fetch ────────────────────────────────────────────────────────
+def fetch_tab_data(which, gid):
+    """Fetch all rows for a specific tab, with row indices."""
+    cache_key = f"{which}:{gid}"
+    now = time.time()
+    cached = _sheet_cache.get(cache_key)
+    if cached and (now - cached['ts']) < SHEET_TTL:
+        return cached
+
+    sheet_id = AWD_SHEET_ID if which == 'awd' else LIB_SHEET_ID
+    ws = get_worksheet_by_gid(sheet_id, gid)
+    if not ws:
+        return None
+    try:
         all_vals = ws.get_all_values()
         if not all_vals:
-            return None
-        headers = all_vals[0]
+            result = {'columns':[], 'rows':[], 'count':0, 'ts':now}
+            _sheet_cache[cache_key] = result
+            return result
+        headers = [h.strip() for h in all_vals[0]]
         rows = []
-        for i, row in enumerate(all_vals[1:], start=2):  # row index 2 = sheet row 2
+        for i, row in enumerate(all_vals[1:], start=2):
             padded = row + [''] * (len(headers) - len(row))
             rows.append({'__row__': i, **dict(zip(headers, padded))})
-        return {'columns': headers, 'rows': rows, 'count': len(rows)}
+        result = {'columns': headers, 'rows': rows, 'count': len(rows), 'ts': now}
+        _sheet_cache[cache_key] = result
+        return result
+    except Exception as e:
+        logging.error(f"fetch_tab_data error [{which}:{gid}]: {e}")
+        return None
 
-    def via_csv(url):
-        try:
-            raw = fetch_csv(url)
-            raw = [{k.strip(): v for k, v in r.items()} for r in raw]
-            if not raw: return None
-            cols = list(raw[0].keys())
-            for i, r in enumerate(raw, start=2):
-                r['__row__'] = i
-            return {'columns': cols, 'rows': raw, 'count': len(raw)}
-        except Exception as e:
-            logging.error(f"CSV fallback error: {e}")
-            return None
-
-    awd = via_gspread(AWD_SHEET_ID, AWD_GID) or via_csv(AWD_URL)
-    lib = via_gspread(LIB_SHEET_ID, LIB_GID) or via_csv(LIB_URL)
-
-    _raw_cache['awd'] = awd
-    _raw_cache['lib'] = lib
-    _raw_cache['ts']  = now
-    return awd, lib
+def bust_tab_cache(which, gid):
+    _sheet_cache.pop(f"{which}:{gid}", None)
+    _cache['ts'] = 0  # also bust dashboard cache
 
 def warmup():
     time.sleep(2)
@@ -349,7 +366,7 @@ def stats():
 @app.route('/api/refresh')
 def refresh():
     _cache['ts'] = 0
-    _raw_cache['ts'] = 0
+    _sheet_cache.clear()
     d = get_data()
     return jsonify({'ok':True,'farms':len(d['farms']) if d else 0})
 
@@ -375,132 +392,99 @@ def dev_logout():
 
 @app.route('/api/dev/me')
 def dev_me():
-    if is_dev():
-        return jsonify({'ok': True, 'username': session['dev_user']})
-    return jsonify({'ok': False}), 401
+    if is_dev(): return jsonify({'ok':True,'username':session['dev_user']})
+    return jsonify({'ok':False}), 401
 
-# ── Raw table (read) ──────────────────────────────────────────────────────────
-@app.route('/api/dev/raw_tables')
-def dev_raw_tables():
-    if not is_dev():
-        return jsonify({'error': 'Unauthorized'}), 401
-    awd, lib = fetch_raw_tables()
-    return jsonify({
-        'awd': awd or {'columns':[],'rows':[],'count':0},
-        'lib': lib or {'columns':[],'rows':[],'count':0},
-    })
+# ── Tab listing (dev) ─────────────────────────────────────────────────────────
+@app.route('/api/dev/tabs/<which>')
+def dev_tabs(which):
+    if not is_dev(): return jsonify({'error':'Unauthorized'}), 401
+    if which not in ('awd','lib'): return jsonify({'error':'Bad sheet'}), 400
+    tabs = get_all_tabs(which)
+    return jsonify({'tabs': tabs})
 
-# ── Cell update (write) ───────────────────────────────────────────────────────
+# ── Tab data (dev) ────────────────────────────────────────────────────────────
+@app.route('/api/dev/tab_data/<which>/<gid>')
+def dev_tab_data(which, gid):
+    if not is_dev(): return jsonify({'error':'Unauthorized'}), 401
+    if which not in ('awd','lib'): return jsonify({'error':'Bad sheet'}), 400
+    data = fetch_tab_data(which, gid)
+    if data is None: return jsonify({'error':'Could not load tab'}), 500
+    return jsonify(data)
+
+# ── Cell update ───────────────────────────────────────────────────────────────
 @app.route('/api/dev/update_cell', methods=['POST'])
 def update_cell():
-    """Update a single cell in a Google Sheet.
-    Body: { sheet: 'awd'|'lib', row: <int>, col: <str column name>, value: <str> }
-    """
-    if not is_dev():
-        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
-
-    body = request.get_json(force=True)
-    which   = body.get('sheet')     # 'awd' or 'lib'
-    row_idx = body.get('row')       # 1-based sheet row number
-    col_name= body.get('col')       # column header name
-    value   = body.get('value', '')
-
-    if which not in ('awd', 'lib') or not row_idx or not col_name:
-        return jsonify({'ok': False, 'error': 'Missing params'}), 400
-
+    if not is_dev(): return jsonify({'ok':False,'error':'Unauthorized'}), 401
+    body     = request.get_json(force=True)
+    which    = body.get('sheet')
+    gid      = str(body.get('gid',''))
+    row_idx  = body.get('row')
+    col_name = body.get('col')
+    value    = body.get('value','')
+    if which not in ('awd','lib') or not gid or not row_idx or not col_name:
+        return jsonify({'ok':False,'error':'Missing params'}), 400
     sheet_id = AWD_SHEET_ID if which == 'awd' else LIB_SHEET_ID
-    gid      = AWD_GID      if which == 'awd' else LIB_GID
-
-    ws = get_worksheet(sheet_id, gid)
-    if not ws:
-        return jsonify({'ok': False, 'error': 'Could not connect to Google Sheets'}), 500
-
+    ws = get_worksheet_by_gid(sheet_id, gid)
+    if not ws: return jsonify({'ok':False,'error':'Cannot connect to sheet'}), 500
     try:
-        # Find column letter by matching header
         headers = ws.row_values(1)
         if col_name not in headers:
-            return jsonify({'ok': False, 'error': f'Column "{col_name}" not found'}), 400
-        col_idx = headers.index(col_name) + 1  # 1-based
-
+            return jsonify({'ok':False,'error':f'Column "{col_name}" not found'}), 400
+        col_idx = headers.index(col_name) + 1
         ws.update_cell(row_idx, col_idx, value)
-
-        # Bust caches
-        _cache['ts']     = 0
-        _raw_cache['ts'] = 0
-
-        logging.info(f"Updated [{which}] row={row_idx} col={col_name} → '{value}' by {session.get('dev_user')}")
-        return jsonify({'ok': True})
+        bust_tab_cache(which, gid)
+        logging.info(f"update_cell [{which}:{gid}] row={row_idx} col={col_name} by {session.get('dev_user')}")
+        return jsonify({'ok':True})
     except Exception as e:
         logging.error(f"update_cell error: {e}")
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok':False,'error':str(e)}), 500
 
-# ── Add new row ───────────────────────────────────────────────────────────────
+# ── Add row ───────────────────────────────────────────────────────────────────
 @app.route('/api/dev/add_row', methods=['POST'])
 def add_row():
-    """Append a new row to a sheet.
-    Body: { sheet: 'awd'|'lib', data: { col_name: value, ... } }
-    """
-    if not is_dev():
-        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
-
+    if not is_dev(): return jsonify({'ok':False,'error':'Unauthorized'}), 401
     body  = request.get_json(force=True)
     which = body.get('sheet')
+    gid   = str(body.get('gid',''))
     data  = body.get('data', {})
-
-    if which not in ('awd', 'lib'):
-        return jsonify({'ok': False, 'error': 'Missing params'}), 400
-
+    if which not in ('awd','lib') or not gid:
+        return jsonify({'ok':False,'error':'Missing params'}), 400
     sheet_id = AWD_SHEET_ID if which == 'awd' else LIB_SHEET_ID
-    gid      = AWD_GID      if which == 'awd' else LIB_GID
-
-    ws = get_worksheet(sheet_id, gid)
-    if not ws:
-        return jsonify({'ok': False, 'error': 'Could not connect to Google Sheets'}), 500
-
+    ws = get_worksheet_by_gid(sheet_id, gid)
+    if not ws: return jsonify({'ok':False,'error':'Cannot connect to sheet'}), 500
     try:
         headers = ws.row_values(1)
-        new_row = [data.get(h, '') for h in headers]
+        new_row = [data.get(h,'') for h in headers]
         ws.append_row(new_row, value_input_option='USER_ENTERED')
-        _cache['ts']     = 0
-        _raw_cache['ts'] = 0
-        logging.info(f"Added row to [{which}] by {session.get('dev_user')}")
-        return jsonify({'ok': True})
+        bust_tab_cache(which, gid)
+        logging.info(f"add_row [{which}:{gid}] by {session.get('dev_user')}")
+        return jsonify({'ok':True})
     except Exception as e:
         logging.error(f"add_row error: {e}")
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok':False,'error':str(e)}), 500
 
 # ── Delete row ────────────────────────────────────────────────────────────────
 @app.route('/api/dev/delete_row', methods=['POST'])
 def delete_row():
-    """Delete a row by its 1-based sheet row index.
-    Body: { sheet: 'awd'|'lib', row: <int> }
-    """
-    if not is_dev():
-        return jsonify({'ok': False, 'error': 'Unauthorized'}), 401
-
+    if not is_dev(): return jsonify({'ok':False,'error':'Unauthorized'}), 401
     body    = request.get_json(force=True)
     which   = body.get('sheet')
+    gid     = str(body.get('gid',''))
     row_idx = body.get('row')
-
-    if which not in ('awd', 'lib') or not row_idx:
-        return jsonify({'ok': False, 'error': 'Missing params'}), 400
-
+    if which not in ('awd','lib') or not gid or not row_idx:
+        return jsonify({'ok':False,'error':'Missing params'}), 400
     sheet_id = AWD_SHEET_ID if which == 'awd' else LIB_SHEET_ID
-    gid      = AWD_GID      if which == 'awd' else LIB_GID
-
-    ws = get_worksheet(sheet_id, gid)
-    if not ws:
-        return jsonify({'ok': False, 'error': 'Could not connect to Google Sheets'}), 500
-
+    ws = get_worksheet_by_gid(sheet_id, gid)
+    if not ws: return jsonify({'ok':False,'error':'Cannot connect to sheet'}), 500
     try:
         ws.delete_rows(row_idx)
-        _cache['ts']     = 0
-        _raw_cache['ts'] = 0
-        logging.info(f"Deleted row {row_idx} from [{which}] by {session.get('dev_user')}")
-        return jsonify({'ok': True})
+        bust_tab_cache(which, gid)
+        logging.info(f"delete_row [{which}:{gid}] row={row_idx} by {session.get('dev_user')}")
+        return jsonify({'ok':True})
     except Exception as e:
         logging.error(f"delete_row error: {e}")
-        return jsonify({'ok': False, 'error': str(e)}), 500
+        return jsonify({'ok':False,'error':str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
