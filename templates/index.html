@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -164,6 +164,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dropdown-wrap.open .dt-arrow{transform:rotate(180deg)}
 
 .dropdown-menu{position:fixed;top:0;right:0;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 12px 36px var(--shadow);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(.34,1.56,.64,1)}
+/* Portal menus get .open directly on themselves */
+.dropdown-menu.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+/* Fallback for inline menus */
 .dropdown-wrap.open .dropdown-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
 
 .dm-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--dimmed);padding:4px 8px 2px;font-family:'JetBrains Mono',monospace}
@@ -793,7 +796,7 @@ window.addEventListener('resize', () => {
 // ══════════════════════════════════════════════
 // THEME SYSTEM
 // ══════════════════════════════════════════════
-let currentTheme = localStorage.getItem('dv-theme') || 'dark';
+let currentTheme = localStorage.getItem('dv-theme') || 'light';
 
 const THEME_META = {
   dark:   { icon: '🌙', label: 'Dark' },
@@ -1125,18 +1128,53 @@ function showTabLoading(which,loading,msg){
 }
 function renderTabTable(which){
   const st=sheetState[which];const data=st.data;if(!data)return;
+  // Dashboard tabs (used by live data) are read-only to prevent accidental edits
+  const READONLY_GIDS = ['1066902470','2142859508']; // AWD Offers: Agreed And Refused, master_control
+  const isReadOnly = READONLY_GIDS.includes(String(st.activeGid));
+
   document.getElementById(`${which}-content-title`).textContent=st.activeTitle;
+  // Show read-only badge in hint
+  const hintEl=document.getElementById(`${which}-content-header`).querySelector('.tab-content-hint');
+  if(hintEl){
+    if(isReadOnly){
+      hintEl.innerHTML='<span style="color:var(--yellow);font-weight:600">⚠ Read-only</span> · This tab drives the live dashboard';
+    } else {
+      hintEl.textContent='Click any cell to edit · Saves directly to Google Sheets';
+    }
+  }
   document.getElementById(`${which}-add-hint`).textContent=`Appends to "${st.activeTitle}"`;
+  // Hide add/delete controls for read-only tabs
+  const addBar=document.getElementById(`${which}-add-bar`);
+  if(addBar) addBar.style.display = isReadOnly ? 'none' : 'flex';
+
   const q=(document.getElementById(`${which}-row-search`)?.value||'').toLowerCase();
   let rows=data.rows||[];if(q)rows=rows.filter(row=>Object.values(row).some(v=>String(v).toLowerCase().includes(q)));
   const sc=st.sort;if(sc.col)rows=[...rows].sort((a,b)=>{const va=a[sc.col]||'',vb=b[sc.col]||'';const na=parseFloat(va),nb=parseFloat(vb);if(!isNaN(na)&&!isNaN(nb))return sc.dir*(na-nb);return sc.dir*String(va).localeCompare(String(vb));});
   document.getElementById(`${which}-row-count`).textContent=`${rows.length} / ${data.count} rows`;
   const cols=data.columns||[];if(!cols.length){document.getElementById(`${which}-table-wrap`).innerHTML='<div class="tab-empty">This tab appears to be empty</div>';return;}
-  let html=`<table class="raw-table"><thead><tr><th style="width:36px"></th>`;
+  let html=`<table class="raw-table"><thead><tr>`;
+  // Only show delete column if editable
+  if(!isReadOnly) html+=`<th style="width:36px"></th>`;
   cols.forEach(c=>{const sorted=sc.col===c;const arrow=sorted?(sc.dir===1?' ↑':' ↓'):'';html+=`<th class="${sorted?'sorted':''}" onclick="sortSheetTable('${which}','${c.replace(/'/g,"\\'")}')"> ${escHtml(c)}${arrow}</th>`;});
   html+='</tr></thead><tbody>';
-  rows.forEach(row=>{const rowIdx=row['__row__'];html+=`<tr data-row="${rowIdx}"><td style="padding:0 4px;text-align:center;width:36px"><button class="btn-del-sm" onclick="confirmDelete('${which}','${st.activeGid}',${rowIdx},this)" title="Delete row">✕</button></td>`;cols.forEach(c=>{if(c==='__row__')return;const val=escHtml(String(row[c]||''));html+=`<td><span class="cell-inner" contenteditable="false" data-original="${val}" data-col="${escHtml(c)}" data-row="${rowIdx}" data-sheet="${which}" data-gid="${st.activeGid}" onclick="startEdit(this)" onblur="cellBlur(this)" onkeydown="cellKeydown(event,this)">${val}</span></td>`;});html+='</tr>';});
-  html+='</tbody></table>';document.getElementById(`${which}-table-wrap`).innerHTML=html;
+  rows.forEach(row=>{
+    const rowIdx=row['__row__'];
+    html+=`<tr data-row="${rowIdx}">`;
+    if(!isReadOnly) html+=`<td style="padding:0 4px;text-align:center;width:36px"><button class="btn-del-sm" onclick="confirmDelete('${which}','${st.activeGid}',${rowIdx},this)" title="Delete row">✕</button></td>`;
+    cols.forEach(c=>{
+      if(c==='__row__')return;
+      const val=escHtml(String(row[c]||''));
+      if(isReadOnly){
+        // Read-only cell — no click handler, dimmed style
+        html+=`<td><span class="cell-inner" style="cursor:default;opacity:.75">${val}</span></td>`;
+      } else {
+        html+=`<td><span class="cell-inner" contenteditable="false" data-original="${val}" data-col="${escHtml(c)}" data-row="${rowIdx}" data-sheet="${which}" data-gid="${st.activeGid}" onclick="startEdit(this)" onblur="cellBlur(this)" onkeydown="cellKeydown(event,this)">${val}</span></td>`;
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById(`${which}-table-wrap`).innerHTML=html;
 }
 function filterCurrentTable(which){renderTabTable(which);}
 function sortSheetTable(which,col){const sc=sheetState[which].sort;if(sc.col===col)sc.dir*=-1;else{sc.col=col;sc.dir=1;}renderTabTable(which);}
