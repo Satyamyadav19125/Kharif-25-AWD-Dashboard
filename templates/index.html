@@ -1132,8 +1132,8 @@ function showTabLoading(which,loading,msg){
 function renderTabTable(which){
   const st=sheetState[which];const data=st.data;if(!data)return;
   // Dashboard tabs (used by live data) are read-only to prevent accidental edits
-  const READONLY_GIDS = ['1066902470','2142859508']; // AWD Offers: Agreed And Refused, master_control
-  const isReadOnly = READONLY_GIDS.includes(String(st.activeGid));
+ const READONLY_GIDS = ['1066902470','2142859508']; // AWD Offers: Agreed And Refused, master_control
+const isReadOnly = !READONLY_GIDS.includes(String(st.activeGid));
 
   document.getElementById(`${which}-content-title`).textContent=st.activeTitle;
   // Show read-only badge in hint
