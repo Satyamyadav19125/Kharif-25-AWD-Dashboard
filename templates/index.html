@@ -163,7 +163,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dropdown-trigger .dt-arrow{font-size:9px;color:var(--muted);margin-left:2px;transition:transform .2s}
 .dropdown-wrap.open .dt-arrow{transform:rotate(180deg)}
 
-.dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:900;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:200px;box-shadow:0 12px 36px var(--shadow);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:all .18s cubic-bezier(.34,1.56,.64,1)}
+.dropdown-menu{position:fixed;top:0;right:0;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 12px 36px var(--shadow);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(.34,1.56,.64,1)}
 .dropdown-wrap.open .dropdown-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
 
 .dm-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--dimmed);padding:4px 8px 2px;font-family:'JetBrains Mono',monospace}
@@ -725,13 +725,37 @@ function toggleDropdown(id) {
   const isOpen = wrap.classList.contains('open');
   // Close all dropdowns first
   document.querySelectorAll('.dropdown-wrap.open').forEach(el => el.classList.remove('open'));
-  if (!isOpen) wrap.classList.add('open');
+  if (!isOpen) {
+    wrap.classList.add('open');
+    positionDropdown(wrap);
+  }
 }
+
+function positionDropdown(wrap) {
+  const trigger = wrap.querySelector('.dropdown-trigger');
+  const menu = wrap.querySelector('.dropdown-menu');
+  if (!trigger || !menu) return;
+  const rect = trigger.getBoundingClientRect();
+  // Place menu below the trigger button
+  menu.style.top = (rect.bottom + 6) + 'px';
+  // Align right edge with button right edge, but don't go off-screen left
+  const menuWidth = Math.max(menu.offsetWidth || 220, 220);
+  let left = rect.right - menuWidth;
+  if (left < 8) left = 8;
+  menu.style.right = 'auto';
+  menu.style.left = left + 'px';
+}
+
 // Close dropdowns when clicking outside
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.dropdown-wrap')) {
     document.querySelectorAll('.dropdown-wrap.open').forEach(el => el.classList.remove('open'));
   }
+});
+
+// Reposition on scroll/resize
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.dropdown-wrap.open').forEach(wrap => positionDropdown(wrap));
 });
 
 // ══════════════════════════════════════════════
