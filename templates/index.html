@@ -46,7 +46,7 @@
 ═══════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-/* Universal theme transition — every element smoothly switches */
+/* Universal theme transition */
 *, *::before, *::after {
   transition:
     background-color .28s ease,
@@ -56,14 +56,8 @@
     box-shadow .28s ease,
     fill .28s ease;
 }
-/* Except animations, transforms and opacity which should be instant/fast */
 *[class*="spinner"],*[style*="animation"],
-.detail-popup,
-.dropdown-menu,
-.modal-overlay,
-.dev-panel,
-.toast,
-.confirm-overlay {
+.detail-popup,.dropdown-menu,.modal-overlay,.dev-panel,.toast,.confirm-overlay {
   transition: none !important;
 }
 .detail-popup{transition:all .25s cubic-bezier(.34,1.56,.64,1) !important}
@@ -76,7 +70,6 @@
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif}
 .app{display:grid;grid-template-rows:auto 1fr;height:100vh}
 
-/* Light mode specific overrides for elements that don't inherit well */
 [data-theme="light"] .section-label{color:var(--dimmed)}
 [data-theme="light"] .donut-num{color:var(--text)}
 [data-theme="light"] .chart-title{color:var(--text)}
@@ -116,8 +109,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 [data-theme="light"] .dm-label{color:var(--dimmed)}
 [data-theme="light"] .tab-count-badge{color:var(--dimmed)}
 [data-theme="light"] .btn-confirm-cancel{color:var(--muted)}
-
-/* Scrollbar colors per theme */
 [data-theme="light"] ::-webkit-scrollbar-thumb{background:var(--border2)}
 [data-theme="light"] .analytics-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
 
@@ -125,25 +116,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
    TOPBAR — 2 rows
 ═══════════════════════════════════════════════════ */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);position:relative;z-index:200}
-
-/* Row 1: Branding */
 .topbar-brand{display:flex;align-items:center;padding:8px 20px 6px;gap:14px;border-bottom:1px solid var(--border)}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{width:36px;height:36px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#000;letter-spacing:-.5px}
-.logo-texts{}
 .logo-main{font-size:14px;font-weight:700;letter-spacing:-.3px;color:var(--logo-text);line-height:1.1}
 .logo-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.2px;margin-top:1px}
-
 .brand-divider{width:1px;height:36px;background:var(--border);flex-shrink:0}
-
 .inst-badges{display:flex;align-items:center;gap:8px}
 .inst-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap}
 .inst-badge .inst-flag{font-size:14px}
 .inst-badge .inst-name{font-size:10px;color:var(--dimmed);font-family:'JetBrains Mono',monospace}
-
 .topbar-brand-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-
-/* Row 2: KPIs + controls */
 .topbar-kpi{display:flex;align-items:center;padding:0 20px;gap:0}
 .kpi-strip{display:flex;gap:0;flex:1;overflow:hidden}
 .kpi{padding:6px 16px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
@@ -154,7 +137,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .tag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;background:var(--green-bg);color:var(--green);border:1px solid rgba(0,230,118,.2)}
 
 /* ═══════════════════════════════════════════════════
-   DROPDOWN BUTTON (shared base for theme + map picker)
+   DROPDOWN
 ═══════════════════════════════════════════════════ */
 .dropdown-wrap{position:relative}
 .dropdown-trigger{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);font-family:inherit;transition:all .15s;white-space:nowrap}
@@ -162,19 +145,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dropdown-trigger .dt-icon{font-size:15px;line-height:1}
 .dropdown-trigger .dt-arrow{font-size:9px;color:var(--muted);margin-left:2px;transition:transform .2s}
 .dropdown-wrap.open .dt-arrow{transform:rotate(180deg)}
-
 .dropdown-menu{position:fixed;top:0;right:0;z-index:9999;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:220px;box-shadow:0 12px 36px var(--shadow);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(.34,1.56,.64,1)}
-/* Portal menus get .open directly on themselves */
 .dropdown-menu.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
-/* Fallback for inline menus */
 .dropdown-wrap.open .dropdown-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
-
 .dm-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--dimmed);padding:4px 8px 2px;font-family:'JetBrains Mono',monospace}
 .dm-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .1s;border:1px solid transparent}
 .dm-item:hover{background:var(--card);border-color:var(--border)}
 .dm-item.active{background:var(--blue-bg);border-color:rgba(64,196,255,.25)}
 .dm-item .dm-icon{font-size:18px;width:26px;text-align:center;flex-shrink:0}
-.dm-item .dm-texts{}
 .dm-item .dm-name{font-size:12px;font-weight:600;color:var(--text)}
 .dm-item .dm-desc{font-size:10px;color:var(--muted);margin-top:1px}
 .dm-item.active .dm-name{color:var(--blue)}
@@ -191,12 +169,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .dev-badge.visible{display:flex}
 .dev-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
 .ctrl-btn{padding:4px 12px;background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
 .ctrl-btn:hover{color:var(--text);border-color:var(--border2)}
 
 /* ═══════════════════════════════════════════════════
-   BODY
+   BODY / ANALYTICS PANEL
 ═══════════════════════════════════════════════════ */
 .body{display:grid;grid-template-columns:400px 1fr;overflow:hidden}
 .analytics{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -269,11 +246,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 ═══════════════════════════════════════════════════ */
 .map-side{position:relative;overflow:hidden}
 #map{width:100%;height:100%}
-
-/* Map picker dropdown anchored inside map */
 .map-picker-wrap{position:absolute;top:14px;right:14px;z-index:500}
 .map-picker-wrap .dropdown-menu{right:0;min-width:220px}
-
 .map-legend{position:absolute;bottom:24px;left:16px;z-index:500;background:var(--map-ctrl-bg);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:200px}
 .ml-title{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dimmed);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
 .ml-item{display:flex;align-items:center;gap:9px;margin-bottom:7px;font-size:12px}
@@ -283,18 +257,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .mso-inner{background:var(--map-ctrl-bg);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 12px}
 .mso-inner input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;padding:10px 0;font-family:inherit}
 .mso-inner input::placeholder{color:var(--dimmed)}
-
 .detail-popup{position:absolute;bottom:24px;right:14px;z-index:600;width:270px;background:var(--map-ctrl-bg);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 16px 48px var(--shadow);transform:translateY(20px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
 .detail-popup.open{transform:translateY(0);opacity:1;pointer-events:all}
 .dp-header{padding:14px 16px 12px;background:linear-gradient(135deg,#1a3a4a 0%,#0f2535 100%);border-bottom:2px solid rgba(64,196,255,.25)}
 [data-theme="light"] .dp-header{background:linear-gradient(135deg,#1a3550 0%,#0e2540 100%);border-bottom:2px solid rgba(26,100,180,.4)}
 .dp-name{font-size:15px;font-weight:700;line-height:1.2;color:#ffffff}
 [data-theme="light"] .dp-name{color:#ffffff}
-/* Badge always readable on dark header */
-.dp-badge-el{display:inline-block;margin-top:5px;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
 .dp-badge-el{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
 .dp-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-.dp-close:hover{background:rgba(255,255,255,.25);color:#fff}
+.dp-close:hover{background:rgba(255,255,255,.25)}
 .dp-body{padding:12px 16px}
 .dp-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
 .dp-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:#7a9ab5}
@@ -367,6 +338,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .tab-item.active{color:var(--purple);background:var(--purple-bg);border-left-color:var(--purple);font-weight:600}
 .tab-item-dot{width:6px;height:6px;border-radius:50%;background:var(--dimmed);flex-shrink:0}
 .tab-item.active .tab-item-dot{background:var(--purple)}
+/* Editable tab indicator — green dot */
+.tab-item-dot.editable{background:var(--green)}
+.tab-item.active .tab-item-dot.editable{background:var(--green)}
 .tab-count-badge{margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--dimmed);flex-shrink:0}
 .tab-content-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
 .tab-content-header{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface)}
@@ -409,8 +383,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .btn-confirm-cancel{padding:8px 18px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit}
 .btn-confirm-cancel:hover{color:var(--text)}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-/* Light mode map tile filter */
 [data-theme="light"] #map { filter: none; }
 [data-theme="dark"] .leaflet-tile-pane { filter: brightness(.9) saturate(.9); }
 </style>
@@ -420,7 +392,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
 <!-- ═══════ TOPBAR ═══════ -->
 <header class="topbar">
-  <!-- Row 1: Branding -->
   <div class="topbar-brand">
     <div class="logo">
       <div class="logo-icon">DV</div>
@@ -448,7 +419,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
     </div>
     <div class="topbar-brand-right">
-      <!-- Theme Dropdown trigger only -->
       <div class="dropdown-wrap" id="theme-dropdown">
         <button class="dropdown-trigger" onclick="toggleDropdown('theme-dropdown')">
           <span class="dt-icon" id="theme-icon">🌙</span>
@@ -459,7 +429,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <span class="tag">● LIVE</span>
     </div>
   </div>
-  <!-- Row 2: KPIs -->
   <div class="topbar-kpi">
     <div class="kpi-strip">
       <div class="kpi"><div class="kpi-val" style="color:var(--text)" id="kv-total">—</div><div class="kpi-lbl">Farms</div></div>
@@ -529,8 +498,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <!-- ═══════ MAP ═══════ -->
   <div class="map-side" id="map-side">
     <div id="map"></div>
-
-    <!-- Map Type Dropdown trigger only -->
     <div class="map-picker-wrap dropdown-wrap" id="map-dropdown">
       <button class="dropdown-trigger" onclick="toggleDropdown('map-dropdown')" style="background:var(--map-ctrl-bg);backdrop-filter:blur(8px)">
         <span class="dt-icon" id="map-icon">🌑</span>
@@ -538,7 +505,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
         <span class="dt-arrow">▼</span>
       </button>
     </div>
-
     <div class="map-search-overlay"><div class="mso-inner"><span style="color:var(--dimmed);font-size:15px">⌕</span><input type="text" id="map-search" placeholder="Jump to village or farmer…" oninput="mapSearch(this.value)"></div></div>
     <div class="map-legend" id="map-legend">
       <div class="ml-title">Study Groups</div>
@@ -608,9 +574,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
           <div class="tab-sidebar-list" id="awd-tab-list"><div style="padding:14px;color:var(--dimmed);font-size:12px">Loading tabs…</div></div>
         </div>
         <div class="tab-content-area" id="awd-content-area">
-          <div class="tab-loading" id="awd-tab-loading" style="display:flex"><div class="spinner"></div><span>Select a tab to view data</span></div>
+          <!-- ── FIXED: no spinner in the idle "select a tab" state ── -->
+          <div class="tab-loading" id="awd-tab-loading" style="display:flex"><span style="color:var(--dimmed)">Select a tab to view data</span></div>
           <div class="tab-content-header" id="awd-content-header" style="display:none">
-            <div><div class="tab-content-title" id="awd-content-title">—</div><div class="tab-content-hint">Click any cell to edit · Saves directly to Google Sheets</div></div>
+            <div><div class="tab-content-title" id="awd-content-title">—</div><div class="tab-content-hint" id="awd-content-hint">Click any cell to edit · Saves directly to Google Sheets</div></div>
             <input class="raw-search" id="awd-row-search" placeholder="Search rows…" oninput="filterCurrentTable('awd')">
             <span class="raw-count" id="awd-row-count"></span>
           </div>
@@ -626,9 +593,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
           <div class="tab-sidebar-list" id="lib-tab-list"><div style="padding:14px;color:var(--dimmed);font-size:12px">Loading tabs…</div></div>
         </div>
         <div class="tab-content-area" id="lib-content-area">
-          <div class="tab-loading" id="lib-tab-loading" style="display:flex"><div class="spinner"></div><span>Select a tab to view data</span></div>
+          <!-- ── FIXED: no spinner in the idle "select a tab" state ── -->
+          <div class="tab-loading" id="lib-tab-loading" style="display:flex"><span style="color:var(--dimmed)">Select a tab to view data</span></div>
           <div class="tab-content-header" id="lib-content-header" style="display:none">
-            <div><div class="tab-content-title" id="lib-content-title">—</div><div class="tab-content-hint">Click any cell to edit · Saves directly to Google Sheets</div></div>
+            <div><div class="tab-content-title" id="lib-content-title">—</div><div class="tab-content-hint" id="lib-content-hint">Click any cell to edit · Saves directly to Google Sheets</div></div>
             <input class="raw-search" id="lib-row-search" placeholder="Search rows…" oninput="filterCurrentTable('lib')">
             <span class="raw-count" id="lib-row-count"></span>
           </div>
@@ -666,9 +634,17 @@ const sheetState={
 let confirmCb=null;
 
 // ══════════════════════════════════════════════
+// EDITABLE GIDs — only these two tabs allow editing.
+// All other tabs in both sheets are read-only.
+// ══════════════════════════════════════════════
+const EDITABLE_GIDS = ['1066902470', '2142859508'];
+
+function isTabReadOnly(gid) {
+  return !EDITABLE_GIDS.includes(String(gid));
+}
+
+// ══════════════════════════════════════════════
 // DROPDOWN PORTAL SYSTEM
-// Menus are injected directly into <body> so they
-// can never be clipped by any parent overflow/z-index
 // ══════════════════════════════════════════════
 const DROPDOWN_DEFS = {
   'theme-dropdown': {
@@ -735,7 +711,6 @@ const DROPDOWN_DEFS = {
   }
 };
 
-// Map of triggerId → portal menu element
 const _portals = {};
 
 function _buildPortals() {
@@ -753,7 +728,6 @@ function toggleDropdown(id) {
   const menu = _portals[id];
   if (!menu) return;
   const isOpen = menu.classList.contains('open');
-  // Close all portals
   Object.values(_portals).forEach(m => m.classList.remove('open'));
   document.querySelectorAll('.dropdown-wrap.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) {
@@ -770,11 +744,9 @@ function _positionPortal(id, menu) {
   const trigger = wrap.querySelector('.dropdown-trigger');
   if (!trigger) return;
   const rect = trigger.getBoundingClientRect();
-  // Always open BELOW the trigger
   menu.style.top = (rect.bottom + 6) + 'px';
   menu.style.left = 'auto';
   menu.style.right = 'auto';
-  // Align right edge with trigger right, clamp to viewport
   const menuW = 230;
   let left = rect.right - menuW;
   if (left < 8) left = 8;
@@ -782,7 +754,6 @@ function _positionPortal(id, menu) {
   menu.style.left = left + 'px';
 }
 
-// Close on outside click
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.dropdown-wrap') && !e.target.closest('.dropdown-portal')) {
     Object.values(_portals).forEach(m => m.classList.remove('open'));
@@ -800,7 +771,6 @@ window.addEventListener('resize', () => {
 // THEME SYSTEM
 // ══════════════════════════════════════════════
 let currentTheme = localStorage.getItem('dv-theme') || 'light';
-
 const THEME_META = {
   dark:   { icon: '🌙', label: 'Dark' },
   light:  { icon: '☀️', label: 'Light' },
@@ -813,15 +783,11 @@ function applyTheme(theme) {
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : theme;
   html.setAttribute('data-theme', resolved);
-
-  // Update trigger button
   const meta = THEME_META[theme];
   const iconEl = document.getElementById('theme-icon');
   const labelEl = document.getElementById('theme-label');
   if (iconEl) iconEl.textContent = meta.icon;
   if (labelEl) labelEl.textContent = meta.label;
-
-  // Update active state in dropdown items (inside portal)
   ['dark','light','system'].forEach(t => {
     const el = (_portals['theme-dropdown'] || document).querySelector('#dmi-' + t);
     if (el) el.classList.toggle('active', t === theme);
@@ -832,14 +798,11 @@ function setTheme(theme) {
   currentTheme = theme;
   localStorage.setItem('dv-theme', theme);
   applyTheme(theme);
-  // Close dropdown portal
   if (_portals['theme-dropdown']) _portals['theme-dropdown'].classList.remove('open');
   document.getElementById('theme-dropdown').classList.remove('open');
-  // Redraw charts to match new theme
   setTimeout(() => { if (STATS.total) renderOverview(); }, 50);
 }
 
-// Listen for system preference changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (currentTheme === 'system') {
     applyTheme('system');
@@ -851,60 +814,24 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 // MAP TILE LAYERS
 // ══════════════════════════════════════════════
 let map, currentTileLayer = null, currentMapType = 'dark';
-
 const MAP_TILES = {
-  satellite: {
-    icon: '🛰', label: 'Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    opts: { maxZoom: 19, attribution: 'Esri' }
-  },
-  hybrid: {
-    icon: '🗺', label: 'Satellite + Labels',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    opts: { maxZoom: 19, attribution: 'Esri', opacity: 0.9 },
-    base: 'satellite'   // layered on top of satellite
-  },
-  street: {
-    icon: '🏙', label: 'Street Map',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    opts: { maxZoom: 19, attribution: 'OSM' }
-  },
-  'carto-light': {
-    icon: '🗾', label: 'Street Light',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    opts: { subdomains: 'abcd', maxZoom: 19 }
-  },
-  dark: {
-    icon: '🌑', label: 'Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    opts: { subdomains: 'abcd', maxZoom: 19 }
-  },
-  topo: {
-    icon: '🏔', label: 'Topographic',
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    opts: { subdomains: 'abc', maxZoom: 17 }
-  },
-  terrain: {
-    icon: '🌿', label: 'Terrain',
-    url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png',
-    opts: { maxZoom: 18, attribution: 'Stadia' }
-  }
+  satellite: { icon:'🛰',label:'Satellite',url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',opts:{maxZoom:19,attribution:'Esri'} },
+  hybrid:    { icon:'🗺',label:'Satellite + Labels',url:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',opts:{maxZoom:19,attribution:'Esri',opacity:0.9},base:'satellite' },
+  street:    { icon:'🏙',label:'Street Map',url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{maxZoom:19,attribution:'OSM'} },
+  'carto-light':{ icon:'🗾',label:'Street Light',url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',opts:{subdomains:'abcd',maxZoom:19} },
+  dark:      { icon:'🌑',label:'Dark',url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',opts:{subdomains:'abcd',maxZoom:19} },
+  topo:      { icon:'🏔',label:'Topographic',url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opts:{subdomains:'abc',maxZoom:17} },
+  terrain:   { icon:'🌿',label:'Terrain',url:'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png',opts:{maxZoom:18,attribution:'Stadia'} },
 };
-
-let _baseTileLayer = null; // for hybrid mode
+let _baseTileLayer = null;
 
 function setMapType(type) {
   if (!map) return;
   currentMapType = type;
-
-  // Remove existing tile layers
   if (currentTileLayer) { map.removeLayer(currentTileLayer); currentTileLayer = null; }
   if (_baseTileLayer)   { map.removeLayer(_baseTileLayer);   _baseTileLayer = null; }
-
   const t = MAP_TILES[type];
-
   if (type === 'hybrid') {
-    // Add satellite base first, then label overlay
     const base = MAP_TILES['satellite'];
     _baseTileLayer = L.tileLayer(base.url, base.opts).addTo(map);
     _baseTileLayer.bringToBack();
@@ -913,20 +840,14 @@ function setMapType(type) {
     currentTileLayer = L.tileLayer(t.url, t.opts).addTo(map);
     currentTileLayer.bringToBack();
   }
-
-  // Update dropdown trigger
   const iconEl = document.getElementById('map-icon');
   const labelEl = document.getElementById('map-label');
   if (iconEl) iconEl.textContent = t.icon;
   if (labelEl) labelEl.textContent = t.label;
-
-  // Update active state inside portal
   Object.keys(MAP_TILES).forEach(k => {
     const el = (_portals['map-dropdown'] || document).querySelector('#map-dmi-' + k);
     if (el) el.classList.toggle('active', k === type);
   });
-
-  // Close dropdown portal
   if (_portals['map-dropdown']) _portals['map-dropdown'].classList.remove('open');
   document.getElementById('map-dropdown').classList.remove('open');
 }
@@ -957,7 +878,11 @@ async function init(){
   initMap();renderTopbar();renderOverview();renderVillageTab();renderFarmList();
   await checkDevSession();
 }
-async function checkDevSession(){try{const r=await fetch('/api/dev/me');if(r.ok){const d=await r.json();if(d.ok)setDevUser(d.username);}}catch(e){}}
+
+async function checkDevSession(){
+  try{const r=await fetch('/api/dev/me');if(r.ok){const d=await r.json();if(d.ok)setDevUser(d.username);}}catch(e){}
+}
+
 async function forceRefresh(){
   const btn=document.querySelector('[onclick="forceRefresh()"]');
   if(btn){btn.textContent='↻ Refreshing…';btn.disabled=true;}
@@ -1057,7 +982,6 @@ function switchTab(name,btn){document.querySelectorAll('.tab-view').forEach(el=>
 // ══════════════════════════════════════════════
 function initMap(){
   map=L.map('map',{center:[30.35,76.35],zoom:11,zoomControl:true});
-  // Default tile layer
   const t = MAP_TILES['dark'];
   currentTileLayer = L.tileLayer(t.url, t.opts).addTo(map);
   FARMS.forEach(f=>{
@@ -1110,65 +1034,141 @@ function closeDevPanel(){document.getElementById('dev-panel').classList.remove('
 function switchDevSection(name,btn){document.querySelectorAll('.dev-sec-tab').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.dev-section').forEach(el=>el.classList.remove('active'));document.getElementById('devsec-'+name).classList.add('active');btn.classList.add('active');}
 function renderVisGrid(){const grid=document.getElementById('vis-grid');grid.innerHTML='';VIS_CONFIG.forEach(v=>{const card=document.createElement('div');card.className='vis-card';card.innerHTML=`<div><div class="vis-card-name">${v.label}</div><div class="vis-card-desc">${v.desc}</div></div><label class="toggle-wrap"><input type="checkbox" ${visState[v.id]?'checked':''} onchange="toggleVis('${v.id}',this.checked)"><span class="toggle-slider"></span></label>`;grid.appendChild(card);});}
 function toggleVis(id,on){visState[id]=on;const cfg=VIS_CONFIG.find(v=>v.id===id);if(!cfg)return;const el=document.querySelector(cfg.selector);if(el){el.style.display=on?'':' none';if(id==='analytics')document.querySelector('.body').style.gridTemplateColumns=on?'400px 1fr':'0 1fr';}}
-async function loadTabList(which){if(sheetState[which].tabs)return renderTabList(which);try{const r=await fetch(`/api/dev/tabs/${which}`);if(!r.ok)return;const d=await r.json();sheetState[which].tabs=d.tabs;renderTabList(which);}catch(e){console.error(e);}}
-function renderTabList(which){
-  const tabs=sheetState[which].tabs||[];const q=(document.getElementById(`${which}-tab-search`)?.value||'').toLowerCase();const filtered=q?tabs.filter(t=>t.title.toLowerCase().includes(q)):tabs;const listEl=document.getElementById(`${which}-tab-list`);listEl.innerHTML='';
-  if(!filtered.length){listEl.innerHTML='<div style="padding:14px;color:var(--dimmed);font-size:12px">No tabs found</div>';return;}
-  filtered.forEach(t=>{const div=document.createElement('div');div.className='tab-item'+(sheetState[which].activeGid===t.gid?' active':'');div.dataset.gid=t.gid;div.dataset.title=t.title;div.innerHTML=`<div class="tab-item-dot"></div><span style="overflow:hidden;text-overflow:ellipsis">${escHtml(t.title)}</span>`;div.onclick=()=>selectSheetTab(which,t.gid,t.title);listEl.appendChild(div);});
+
+async function loadTabList(which){
+  if(sheetState[which].tabs)return renderTabList(which);
+  try{
+    const r=await fetch(`/api/dev/tabs/${which}`);
+    if(!r.ok)return;
+    const d=await r.json();
+    sheetState[which].tabs=d.tabs;
+    renderTabList(which);
+  }catch(e){console.error(e);}
 }
+
+function renderTabList(which){
+  const tabs=sheetState[which].tabs||[];
+  const q=(document.getElementById(`${which}-tab-search`)?.value||'').toLowerCase();
+  const filtered=q?tabs.filter(t=>t.title.toLowerCase().includes(q)):tabs;
+  const listEl=document.getElementById(`${which}-tab-list`);
+  listEl.innerHTML='';
+  if(!filtered.length){listEl.innerHTML='<div style="padding:14px;color:var(--dimmed);font-size:12px">No tabs found</div>';return;}
+  filtered.forEach(t=>{
+    const editable = EDITABLE_GIDS.includes(String(t.gid));
+    const div=document.createElement('div');
+    div.className='tab-item'+(sheetState[which].activeGid===t.gid?' active':'');
+    div.dataset.gid=t.gid;
+    div.dataset.title=t.title;
+    // Green dot for editable tabs, grey for read-only
+    const dotClass = editable ? 'tab-item-dot editable' : 'tab-item-dot';
+    const editBadge = editable ? `<span style="margin-left:auto;font-size:9px;color:var(--green);font-family:'JetBrains Mono',monospace;flex-shrink:0">✎</span>` : '';
+    div.innerHTML=`<div class="${dotClass}"></div><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${escHtml(t.title)}</span>${editBadge}`;
+    div.onclick=()=>selectSheetTab(which,t.gid,t.title);
+    listEl.appendChild(div);
+  });
+}
+
 function filterTabList(which){renderTabList(which);}
+
 async function selectSheetTab(which,gid,title){
-  sheetState[which].activeGid=gid;sheetState[which].activeTitle=title;sheetState[which].sort={col:null,dir:1};
+  sheetState[which].activeGid=gid;
+  sheetState[which].activeTitle=title;
+  sheetState[which].sort={col:null,dir:1};
   document.querySelectorAll(`#${which}-tab-list .tab-item`).forEach(el=>{el.classList.toggle('active',el.dataset.gid===gid);});
   showTabLoading(which,true);
-  try{const r=await fetch(`/api/dev/tab_data/${which}/${gid}`);if(!r.ok){showTabLoading(which,false,'Could not load tab');return;}const d=await r.json();sheetState[which].data=d;showTabLoading(which,false);renderTabTable(which);}catch(e){showTabLoading(which,false,'Network error');}
+  try{
+    const r=await fetch(`/api/dev/tab_data/${which}/${gid}`);
+    if(!r.ok){showTabLoading(which,false,'Could not load tab');return;}
+    const d=await r.json();
+    sheetState[which].data=d;
+    showTabLoading(which,false);
+    renderTabTable(which);
+  }catch(e){showTabLoading(which,false,'Network error');}
 }
+
 function showTabLoading(which,loading,msg){
-  const loadEl=document.getElementById(`${which}-tab-loading`);const headerEl=document.getElementById(`${which}-content-header`);const tableEl=document.getElementById(`${which}-table-wrap`);const addBarEl=document.getElementById(`${which}-add-bar`);
-  if(loading){loadEl.style.display='flex';loadEl.innerHTML=`<div class="spinner"></div><span>Loading…</span>`;headerEl.style.display='none';tableEl.style.display='none';addBarEl.style.display='none';}
-  else if(msg){loadEl.style.display='flex';loadEl.innerHTML=`<span style="color:var(--red)">${msg}</span>`;}
-  else{loadEl.style.display='none';headerEl.style.display='flex';tableEl.style.display='flex';addBarEl.style.display='flex';}
+  const loadEl=document.getElementById(`${which}-tab-loading`);
+  const headerEl=document.getElementById(`${which}-content-header`);
+  const tableEl=document.getElementById(`${which}-table-wrap`);
+  const addBarEl=document.getElementById(`${which}-add-bar`);
+  if(loading){
+    // Show spinner only while actually fetching
+    loadEl.style.display='flex';
+    loadEl.innerHTML=`<div class="spinner"></div><span>Loading…</span>`;
+    headerEl.style.display='none';
+    tableEl.style.display='none';
+    addBarEl.style.display='none';
+  } else if(msg){
+    loadEl.style.display='flex';
+    loadEl.innerHTML=`<span style="color:var(--red)">${msg}</span>`;
+  } else {
+    loadEl.style.display='none';
+    headerEl.style.display='flex';
+    tableEl.style.display='flex';
+    addBarEl.style.display='flex';
+  }
 }
+
 function renderTabTable(which){
-  const st=sheetState[which];const data=st.data;if(!data)return;
-  // Dashboard tabs (used by live data) are read-only to prevent accidental edits
- const READONLY_GIDS = ['1066902470','2142859508']; // AWD Offers: Agreed And Refused, master_control
-const isReadOnly = !READONLY_GIDS.includes(String(st.activeGid));
+  const st=sheetState[which];
+  const data=st.data;
+  if(!data)return;
+
+  // ── Only EDITABLE_GIDS are editable; everything else is read-only ──
+  const readOnly = isTabReadOnly(st.activeGid);
 
   document.getElementById(`${which}-content-title`).textContent=st.activeTitle;
-  // Show read-only badge in hint
-  const hintEl=document.getElementById(`${which}-content-header`).querySelector('.tab-content-hint');
+
+  // Hint text
+  const hintEl=document.getElementById(`${which}-content-hint`);
   if(hintEl){
-    if(isReadOnly){
-      hintEl.innerHTML='<span style="color:var(--yellow);font-weight:600">⚠ Read-only</span> · This tab drives the live dashboard';
+    if(readOnly){
+      hintEl.innerHTML='<span style="color:var(--yellow);font-weight:600">⚠ Read-only</span> · This tab is view-only';
     } else {
       hintEl.textContent='Click any cell to edit · Saves directly to Google Sheets';
     }
   }
+
   document.getElementById(`${which}-add-hint`).textContent=`Appends to "${st.activeTitle}"`;
-  // Hide add/delete controls for read-only tabs
+
+  // Hide Add Row bar for read-only tabs
   const addBar=document.getElementById(`${which}-add-bar`);
-  if(addBar) addBar.style.display = isReadOnly ? 'none' : 'flex';
+  if(addBar) addBar.style.display = readOnly ? 'none' : 'flex';
 
   const q=(document.getElementById(`${which}-row-search`)?.value||'').toLowerCase();
-  let rows=data.rows||[];if(q)rows=rows.filter(row=>Object.values(row).some(v=>String(v).toLowerCase().includes(q)));
-  const sc=st.sort;if(sc.col)rows=[...rows].sort((a,b)=>{const va=a[sc.col]||'',vb=b[sc.col]||'';const na=parseFloat(va),nb=parseFloat(vb);if(!isNaN(na)&&!isNaN(nb))return sc.dir*(na-nb);return sc.dir*String(va).localeCompare(String(vb));});
+  let rows=data.rows||[];
+  if(q)rows=rows.filter(row=>Object.values(row).some(v=>String(v).toLowerCase().includes(q)));
+  const sc=st.sort;
+  if(sc.col)rows=[...rows].sort((a,b)=>{
+    const va=a[sc.col]||'',vb=b[sc.col]||'';
+    const na=parseFloat(va),nb=parseFloat(vb);
+    if(!isNaN(na)&&!isNaN(nb))return sc.dir*(na-nb);
+    return sc.dir*String(va).localeCompare(String(vb));
+  });
   document.getElementById(`${which}-row-count`).textContent=`${rows.length} / ${data.count} rows`;
-  const cols=data.columns||[];if(!cols.length){document.getElementById(`${which}-table-wrap`).innerHTML='<div class="tab-empty">This tab appears to be empty</div>';return;}
+  const cols=data.columns||[];
+  if(!cols.length){
+    document.getElementById(`${which}-table-wrap`).innerHTML='<div class="tab-empty">This tab appears to be empty</div>';
+    return;
+  }
+
   let html=`<table class="raw-table"><thead><tr>`;
-  // Only show delete column if editable
-  if(!isReadOnly) html+=`<th style="width:36px"></th>`;
-  cols.forEach(c=>{const sorted=sc.col===c;const arrow=sorted?(sc.dir===1?' ↑':' ↓'):'';html+=`<th class="${sorted?'sorted':''}" onclick="sortSheetTable('${which}','${c.replace(/'/g,"\\'")}')"> ${escHtml(c)}${arrow}</th>`;});
+  if(!readOnly) html+=`<th style="width:36px"></th>`;
+  cols.forEach(c=>{
+    const sorted=sc.col===c;
+    const arrow=sorted?(sc.dir===1?' ↑':' ↓'):'';
+    html+=`<th class="${sorted?'sorted':''}" onclick="sortSheetTable('${which}','${c.replace(/'/g,"\\'")}')"> ${escHtml(c)}${arrow}</th>`;
+  });
   html+='</tr></thead><tbody>';
+
   rows.forEach(row=>{
     const rowIdx=row['__row__'];
     html+=`<tr data-row="${rowIdx}">`;
-    if(!isReadOnly) html+=`<td style="padding:0 4px;text-align:center;width:36px"><button class="btn-del-sm" onclick="confirmDelete('${which}','${st.activeGid}',${rowIdx},this)" title="Delete row">✕</button></td>`;
+    if(!readOnly) html+=`<td style="padding:0 4px;text-align:center;width:36px"><button class="btn-del-sm" onclick="confirmDelete('${which}','${st.activeGid}',${rowIdx},this)" title="Delete row">✕</button></td>`;
     cols.forEach(c=>{
       if(c==='__row__')return;
       const val=escHtml(String(row[c]||''));
-      if(isReadOnly){
-        // Read-only cell — no click handler, dimmed style
+      if(readOnly){
         html+=`<td><span class="cell-inner" style="cursor:default;opacity:.75">${val}</span></td>`;
       } else {
         html+=`<td><span class="cell-inner" contenteditable="false" data-original="${val}" data-col="${escHtml(c)}" data-row="${rowIdx}" data-sheet="${which}" data-gid="${st.activeGid}" onclick="startEdit(this)" onblur="cellBlur(this)" onkeydown="cellKeydown(event,this)">${val}</span></td>`;
@@ -1179,27 +1179,62 @@ const isReadOnly = !READONLY_GIDS.includes(String(st.activeGid));
   html+='</tbody></table>';
   document.getElementById(`${which}-table-wrap`).innerHTML=html;
 }
+
 function filterCurrentTable(which){renderTabTable(which);}
 function sortSheetTable(which,col){const sc=sheetState[which].sort;if(sc.col===col)sc.dir*=-1;else{sc.col=col;sc.dir=1;}renderTabTable(which);}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function startEdit(el){if(el.contentEditable==='true')return;el.contentEditable='true';el.classList.add('editing');const range=document.createRange(),sel=window.getSelection();range.selectNodeContents(el);range.collapse(false);sel.removeAllRanges();sel.addRange(range);}
 function cellKeydown(e,el){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();el.blur();}if(e.key==='Escape'){el.textContent=el.dataset.original;el.contentEditable='false';el.classList.remove('editing');}}
+
 async function cellBlur(el){
-  el.contentEditable='false';el.classList.remove('editing');const newVal=el.textContent.trim();if(newVal===el.dataset.original)return;
-  const sheet=el.dataset.sheet,gid=el.dataset.gid,rowIdx=parseInt(el.dataset.row),col=el.dataset.col;el.style.opacity='0.5';
-  try{const r=await fetch('/api/dev/update_cell',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet,gid,row:rowIdx,col,value:newVal})});const d=await r.json();if(d.ok){el.dataset.original=newVal;el.style.opacity='1';showToast('✓ Saved to Google Sheets','ok');if(sheetState[sheet].data){const lr=sheetState[sheet].data.rows.find(r=>r['__row__']===rowIdx);if(lr)lr[col]=newVal;}}else{el.textContent=el.dataset.original;el.style.opacity='1';showToast('✗ Save failed: '+d.error,'err');}}catch(e){el.textContent=el.dataset.original;el.style.opacity='1';showToast('✗ Network error','err');}
+  el.contentEditable='false';el.classList.remove('editing');
+  const newVal=el.textContent.trim();
+  if(newVal===el.dataset.original)return;
+  const sheet=el.dataset.sheet,gid=el.dataset.gid,rowIdx=parseInt(el.dataset.row),col=el.dataset.col;
+  el.style.opacity='0.5';
+  try{
+    const r=await fetch('/api/dev/update_cell',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet,gid,row:rowIdx,col,value:newVal})});
+    const d=await r.json();
+    if(d.ok){
+      el.dataset.original=newVal;el.style.opacity='1';
+      showToast('✓ Saved to Google Sheets','ok');
+      if(sheetState[sheet].data){const lr=sheetState[sheet].data.rows.find(r=>r['__row__']===rowIdx);if(lr)lr[col]=newVal;}
+    }else{
+      el.textContent=el.dataset.original;el.style.opacity='1';
+      showToast('✗ Save failed: '+d.error,'err');
+    }
+  }catch(e){el.textContent=el.dataset.original;el.style.opacity='1';showToast('✗ Network error','err');}
 }
+
 async function addNewRow(which){
-  const st=sheetState[which];if(!st.activeGid||!st.data)return;const emptyData={};(st.data.columns||[]).forEach(c=>{emptyData[c]='';});
-  try{const r=await fetch('/api/dev/add_row',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:which,gid:st.activeGid,data:emptyData})});const d=await r.json();if(d.ok){showToast('✓ Row added to Google Sheets','ok');await selectSheetTab(which,st.activeGid,st.activeTitle);}else{showToast('✗ Failed: '+d.error,'err');}}catch(e){showToast('✗ Network error','err');}
+  const st=sheetState[which];
+  if(!st.activeGid||!st.data)return;
+  const emptyData={};(st.data.columns||[]).forEach(c=>{emptyData[c]='';});
+  try{
+    const r=await fetch('/api/dev/add_row',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:which,gid:st.activeGid,data:emptyData})});
+    const d=await r.json();
+    if(d.ok){showToast('✓ Row added to Google Sheets','ok');await selectSheetTab(which,st.activeGid,st.activeTitle);}
+    else{showToast('✗ Failed: '+d.error,'err');}
+  }catch(e){showToast('✗ Network error','err');}
 }
+
 function confirmDelete(which,gid,rowIdx,btnEl){
   const tr=btnEl.closest('tr');const firstCell=tr.querySelector('.cell-inner');const preview=firstCell?firstCell.textContent.trim().slice(0,40):'Row '+rowIdx;
   document.getElementById('confirm-msg').textContent=`Permanently delete "${preview}" (row ${rowIdx}) from Google Sheets?`;
-  confirmCb=async()=>{closeConfirm();try{const r=await fetch('/api/dev/delete_row',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:which,gid,row:rowIdx})});const d=await r.json();if(d.ok){showToast('✓ Row deleted','ok');const st=sheetState[which];await selectSheetTab(which,st.activeGid,st.activeTitle);}else{showToast('✗ Delete failed: '+d.error,'err');}}catch(e){showToast('✗ Network error','err');}};
-  document.getElementById('confirm-ok-btn').onclick=confirmCb;document.getElementById('confirm-overlay').classList.add('open');
+  confirmCb=async()=>{
+    closeConfirm();
+    try{
+      const r=await fetch('/api/dev/delete_row',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:which,gid,row:rowIdx})});
+      const d=await r.json();
+      if(d.ok){showToast('✓ Row deleted','ok');const st=sheetState[which];await selectSheetTab(which,st.activeGid,st.activeTitle);}
+      else{showToast('✗ Delete failed: '+d.error,'err');}
+    }catch(e){showToast('✗ Network error','err');}
+  };
+  document.getElementById('confirm-ok-btn').onclick=confirmCb;
+  document.getElementById('confirm-overlay').classList.add('open');
 }
 function closeConfirm(){document.getElementById('confirm-overlay').classList.remove('open');confirmCb=null;}
+
 let toastTimer=null;
 function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');},3000);}
 
