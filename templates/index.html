@@ -283,8 +283,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 
 .detail-popup{position:absolute;bottom:24px;right:14px;z-index:600;width:270px;background:var(--map-ctrl-bg);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 16px 48px var(--shadow);transform:translateY(20px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
 .detail-popup.open{transform:translateY(0);opacity:1;pointer-events:all}
-.dp-header{padding:14px 16px 10px;background:linear-gradient(135deg,var(--blue-bg),var(--green-bg));border-bottom:1px solid var(--border)}
-.dp-name{font-size:15px;font-weight:700;line-height:1.2}
+.dp-header{padding:14px 16px 12px;background:linear-gradient(135deg,#1a3a4a 0%,#0f2535 100%);border-bottom:2px solid rgba(64,196,255,.25)}
+[data-theme="light"] .dp-header{background:linear-gradient(135deg,#dbeeff 0%,#c8e6f8 100%);border-bottom:2px solid rgba(26,136,212,.25)}
+.dp-name{font-size:15px;font-weight:700;line-height:1.2;color:#e8f4ff}
+[data-theme="light"] .dp-name{color:#0d2d45}
 .dp-badge-el{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
 .dp-close{position:absolute;top:12px;right:12px;background:var(--card);border:1px solid var(--border);color:var(--muted);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 .dp-close:hover{color:var(--text)}
@@ -440,31 +442,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       </div>
     </div>
     <div class="topbar-brand-right">
-      <!-- Theme Dropdown -->
+      <!-- Theme Dropdown trigger only -->
       <div class="dropdown-wrap" id="theme-dropdown">
         <button class="dropdown-trigger" onclick="toggleDropdown('theme-dropdown')">
           <span class="dt-icon" id="theme-icon">🌙</span>
           <span id="theme-label">Dark</span>
           <span class="dt-arrow">▼</span>
         </button>
-        <div class="dropdown-menu">
-          <div class="dm-label">Appearance</div>
-          <div class="dm-item active" id="dmi-dark" onclick="setTheme('dark')">
-            <span class="dm-icon">🌙</span>
-            <div class="dm-texts"><div class="dm-name">Dark Mode</div><div class="dm-desc">Dark background, easy on eyes</div></div>
-            <span class="dm-check">✓</span>
-          </div>
-          <div class="dm-item" id="dmi-light" onclick="setTheme('light')">
-            <span class="dm-icon">☀️</span>
-            <div class="dm-texts"><div class="dm-name">Light Mode</div><div class="dm-desc">Bright background, high contrast</div></div>
-            <span class="dm-check">✓</span>
-          </div>
-          <div class="dm-item" id="dmi-system" onclick="setTheme('system')">
-            <span class="dm-icon">💻</span>
-            <div class="dm-texts"><div class="dm-name">System</div><div class="dm-desc">Follows your OS setting</div></div>
-            <span class="dm-check">✓</span>
-          </div>
-        </div>
       </div>
       <span class="tag">● LIVE</span>
     </div>
@@ -540,55 +524,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <div class="map-side" id="map-side">
     <div id="map"></div>
 
-    <!-- Map Type Dropdown (top-right of map) -->
+    <!-- Map Type Dropdown trigger only -->
     <div class="map-picker-wrap dropdown-wrap" id="map-dropdown">
       <button class="dropdown-trigger" onclick="toggleDropdown('map-dropdown')" style="background:var(--map-ctrl-bg);backdrop-filter:blur(8px)">
         <span class="dt-icon" id="map-icon">🌑</span>
         <span id="map-label">Dark</span>
         <span class="dt-arrow">▼</span>
       </button>
-      <div class="dropdown-menu">
-        <div class="dm-label">Map Style</div>
-        <div class="dm-item" id="map-dmi-satellite" onclick="setMapType('satellite')">
-          <span class="dm-icon">🛰</span>
-          <div class="dm-texts"><div class="dm-name">Satellite</div><div class="dm-desc">Esri World Imagery 2026</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-item" id="map-dmi-hybrid" onclick="setMapType('hybrid')">
-          <span class="dm-icon">🗺</span>
-          <div class="dm-texts"><div class="dm-name">Satellite + Labels</div><div class="dm-desc">Satellite with roads & names</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-sep"></div>
-        <div class="dm-label">Street Maps</div>
-        <div class="dm-item" id="map-dmi-street" onclick="setMapType('street')">
-          <span class="dm-icon">🏙</span>
-          <div class="dm-texts"><div class="dm-name">Street Map</div><div class="dm-desc">OpenStreetMap standard</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-item" id="map-dmi-carto-light" onclick="setMapType('carto-light')">
-          <span class="dm-icon">🗾</span>
-          <div class="dm-texts"><div class="dm-name">Street Light</div><div class="dm-desc">CartoDB clean light style</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-item active" id="map-dmi-dark" onclick="setMapType('dark')">
-          <span class="dm-icon">🌑</span>
-          <div class="dm-texts"><div class="dm-name">Dark</div><div class="dm-desc">CartoDB dark matter</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-sep"></div>
-        <div class="dm-label">Terrain</div>
-        <div class="dm-item" id="map-dmi-topo" onclick="setMapType('topo')">
-          <span class="dm-icon">🏔</span>
-          <div class="dm-texts"><div class="dm-name">Topographic</div><div class="dm-desc">OpenTopoMap elevation detail</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-        <div class="dm-item" id="map-dmi-terrain" onclick="setMapType('terrain')">
-          <span class="dm-icon">🌿</span>
-          <div class="dm-texts"><div class="dm-name">Terrain</div><div class="dm-desc">Stadia Stamen terrain</div></div>
-          <span class="dm-check">✓</span>
-        </div>
-      </div>
     </div>
 
     <div class="map-search-overlay"><div class="mso-inner"><span style="color:var(--dimmed);font-size:15px">⌕</span><input type="text" id="map-search" placeholder="Jump to village or farmer…" oninput="mapSearch(this.value)"></div></div>
@@ -718,44 +660,134 @@ const sheetState={
 let confirmCb=null;
 
 // ══════════════════════════════════════════════
-// DROPDOWN SYSTEM
+// DROPDOWN PORTAL SYSTEM
+// Menus are injected directly into <body> so they
+// can never be clipped by any parent overflow/z-index
 // ══════════════════════════════════════════════
+const DROPDOWN_DEFS = {
+  'theme-dropdown': {
+    html: `
+      <div class="dm-label">Appearance</div>
+      <div class="dm-item active" id="dmi-dark" onclick="setTheme('dark')">
+        <span class="dm-icon">🌙</span>
+        <div class="dm-texts"><div class="dm-name">Dark Mode</div><div class="dm-desc">Dark background, easy on eyes</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item" id="dmi-light" onclick="setTheme('light')">
+        <span class="dm-icon">☀️</span>
+        <div class="dm-texts"><div class="dm-name">Light Mode</div><div class="dm-desc">Bright, clean, high contrast</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item" id="dmi-system" onclick="setTheme('system')">
+        <span class="dm-icon">💻</span>
+        <div class="dm-texts"><div class="dm-name">System</div><div class="dm-desc">Follows your OS setting</div></div>
+        <span class="dm-check">✓</span>
+      </div>`
+  },
+  'map-dropdown': {
+    html: `
+      <div class="dm-label">Map Style</div>
+      <div class="dm-item" id="map-dmi-satellite" onclick="setMapType('satellite')">
+        <span class="dm-icon">🛰</span>
+        <div class="dm-texts"><div class="dm-name">Satellite</div><div class="dm-desc">Esri World Imagery 2026</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item" id="map-dmi-hybrid" onclick="setMapType('hybrid')">
+        <span class="dm-icon">🗺</span>
+        <div class="dm-texts"><div class="dm-name">Satellite + Labels</div><div class="dm-desc">Satellite with roads & names</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-sep"></div>
+      <div class="dm-label">Street Maps</div>
+      <div class="dm-item" id="map-dmi-street" onclick="setMapType('street')">
+        <span class="dm-icon">🏙</span>
+        <div class="dm-texts"><div class="dm-name">Street Map</div><div class="dm-desc">OpenStreetMap standard</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item" id="map-dmi-carto-light" onclick="setMapType('carto-light')">
+        <span class="dm-icon">🗾</span>
+        <div class="dm-texts"><div class="dm-name">Street Light</div><div class="dm-desc">CartoDB clean light style</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item active" id="map-dmi-dark" onclick="setMapType('dark')">
+        <span class="dm-icon">🌑</span>
+        <div class="dm-texts"><div class="dm-name">Dark</div><div class="dm-desc">CartoDB dark matter</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-sep"></div>
+      <div class="dm-label">Terrain</div>
+      <div class="dm-item" id="map-dmi-topo" onclick="setMapType('topo')">
+        <span class="dm-icon">🏔</span>
+        <div class="dm-texts"><div class="dm-name">Topographic</div><div class="dm-desc">OpenTopoMap elevation detail</div></div>
+        <span class="dm-check">✓</span>
+      </div>
+      <div class="dm-item" id="map-dmi-terrain" onclick="setMapType('terrain')">
+        <span class="dm-icon">🌿</span>
+        <div class="dm-texts"><div class="dm-name">Terrain</div><div class="dm-desc">Stadia terrain with elevation</div></div>
+        <span class="dm-check">✓</span>
+      </div>`
+  }
+};
+
+// Map of triggerId → portal menu element
+const _portals = {};
+
+function _buildPortals() {
+  Object.entries(DROPDOWN_DEFS).forEach(([id, def]) => {
+    const menu = document.createElement('div');
+    menu.className = 'dropdown-menu dropdown-portal';
+    menu.dataset.for = id;
+    menu.innerHTML = def.html;
+    document.body.appendChild(menu);
+    _portals[id] = menu;
+  });
+}
+
 function toggleDropdown(id) {
-  const wrap = document.getElementById(id);
-  const isOpen = wrap.classList.contains('open');
-  // Close all dropdowns first
+  const menu = _portals[id];
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  // Close all portals
+  Object.values(_portals).forEach(m => m.classList.remove('open'));
   document.querySelectorAll('.dropdown-wrap.open').forEach(el => el.classList.remove('open'));
   if (!isOpen) {
-    wrap.classList.add('open');
-    positionDropdown(wrap);
+    const wrap = document.getElementById(id);
+    if (wrap) wrap.classList.add('open');
+    _positionPortal(id, menu);
+    menu.classList.add('open');
   }
 }
 
-function positionDropdown(wrap) {
+function _positionPortal(id, menu) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
   const trigger = wrap.querySelector('.dropdown-trigger');
-  const menu = wrap.querySelector('.dropdown-menu');
-  if (!trigger || !menu) return;
+  if (!trigger) return;
   const rect = trigger.getBoundingClientRect();
-  // Place menu below the trigger button
+  // Always open BELOW the trigger
   menu.style.top = (rect.bottom + 6) + 'px';
-  // Align right edge with button right edge, but don't go off-screen left
-  const menuWidth = Math.max(menu.offsetWidth || 220, 220);
-  let left = rect.right - menuWidth;
-  if (left < 8) left = 8;
+  menu.style.left = 'auto';
   menu.style.right = 'auto';
+  // Align right edge with trigger right, clamp to viewport
+  const menuW = 230;
+  let left = rect.right - menuW;
+  if (left < 8) left = 8;
+  if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
   menu.style.left = left + 'px';
 }
 
-// Close dropdowns when clicking outside
+// Close on outside click
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.dropdown-wrap')) {
+  if (!e.target.closest('.dropdown-wrap') && !e.target.closest('.dropdown-portal')) {
+    Object.values(_portals).forEach(m => m.classList.remove('open'));
     document.querySelectorAll('.dropdown-wrap.open').forEach(el => el.classList.remove('open'));
   }
 });
 
-// Reposition on scroll/resize
 window.addEventListener('resize', () => {
-  document.querySelectorAll('.dropdown-wrap.open').forEach(wrap => positionDropdown(wrap));
+  Object.entries(_portals).forEach(([id, menu]) => {
+    if (menu.classList.contains('open')) _positionPortal(id, menu);
+  });
 });
 
 // ══════════════════════════════════════════════
@@ -783,9 +815,9 @@ function applyTheme(theme) {
   if (iconEl) iconEl.textContent = meta.icon;
   if (labelEl) labelEl.textContent = meta.label;
 
-  // Update active state in dropdown items
+  // Update active state in dropdown items (inside portal)
   ['dark','light','system'].forEach(t => {
-    const el = document.getElementById('dmi-' + t);
+    const el = (_portals['theme-dropdown'] || document).querySelector('#dmi-' + t);
     if (el) el.classList.toggle('active', t === theme);
   });
 }
@@ -794,7 +826,8 @@ function setTheme(theme) {
   currentTheme = theme;
   localStorage.setItem('dv-theme', theme);
   applyTheme(theme);
-  // Close dropdown
+  // Close dropdown portal
+  if (_portals['theme-dropdown']) _portals['theme-dropdown'].classList.remove('open');
   document.getElementById('theme-dropdown').classList.remove('open');
   // Redraw charts to match new theme
   setTimeout(() => { if (STATS.total) renderOverview(); }, 50);
@@ -881,13 +914,14 @@ function setMapType(type) {
   if (iconEl) iconEl.textContent = t.icon;
   if (labelEl) labelEl.textContent = t.label;
 
-  // Update active state
+  // Update active state inside portal
   Object.keys(MAP_TILES).forEach(k => {
-    const el = document.getElementById('map-dmi-' + k);
+    const el = (_portals['map-dropdown'] || document).querySelector('#map-dmi-' + k);
     if (el) el.classList.toggle('active', k === type);
   });
 
-  // Close dropdown
+  // Close dropdown portal
+  if (_portals['map-dropdown']) _portals['map-dropdown'].classList.remove('open');
   document.getElementById('map-dropdown').classList.remove('open');
 }
 
@@ -907,6 +941,7 @@ const VIS_CONFIG=[
 const visState={};VIS_CONFIG.forEach(v=>visState[v.id]=true);
 
 async function init(){
+  _buildPortals();
   applyTheme(currentTheme);
   [FARMS,VILLAGES,STATS]=await Promise.all([
     fetch('/api/farms').then(r=>r.json()),
