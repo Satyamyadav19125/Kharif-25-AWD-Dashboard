@@ -53,6 +53,14 @@ def get_gs_client():
                 info = json.load(f)
         creds = Credentials.from_service_account_info(info, scopes=scopes)
         _gs_client = gspread.authorize(creds)
+
+        # ── Speed fix: set a hard timeout on every gspread HTTP request ──
+        # Without this, a slow Google API response can hang indefinitely.
+        try:
+            _gs_client.session.timeout = 15
+        except Exception:
+            pass  # older gspread versions may not expose .session directly
+
         logging.info("gspread client initialized")
         return _gs_client
     except Exception as e:
@@ -85,7 +93,7 @@ _cache        = {"data": None, "ts": 0}
 _tabs_cache   = {"awd": None, "lib": None, "ts": 0}
 _sheet_cache  = {}   # key: "sheetid:gid" → {columns, rows, count, ts}
 CACHE_TTL     = 60
-SHEET_TTL     = 120
+SHEET_TTL     = 300   # increased from 120 → 300 to reduce round-trips
 TABS_TTL      = 300
 
 # ── CSV helpers ───────────────────────────────────────────────────────────────
@@ -316,7 +324,9 @@ def fetch_tab_data(which, gid):
     if not ws:
         return None
     try:
-        all_vals = ws.get_all_values()
+        # ── Speed fix: FORMATTED_VALUE skips server-side formula evaluation,
+        #    which is the main cause of slow responses on formula-heavy sheets.
+        all_vals = ws.get_all_values(value_render_option='FORMATTED_VALUE')
         if not all_vals:
             result = {'columns':[], 'rows':[], 'count':0, 'ts':now}
             _sheet_cache[cache_key] = result
